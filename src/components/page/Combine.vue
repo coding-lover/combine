@@ -392,6 +392,7 @@
                         console.log(res)
                         this.form.ready = true;
                         this.downloadFileByContent(res, this.form.fileName + this.form.fileSuffix);
+                        this.$message.success("合并成功，文件：" + this.form.fileName + this.form.fileSuffix);
                     });
 
                     console.log('content')
@@ -545,15 +546,12 @@
                     fileReader.readAsText(file.raw);
 
                 });
-
-                this.$message({
-                    message: idx + '-' + replaceKey,
-                    type: 'success'
-                });
             },
 
             downloadFileByContent(content, fileName) {
-               let file = new File([content], fileName);
+               let file = new File([content], fileName, {
+                   type: 'text/plain',
+               });
                this.downloadBlob(URL.createObjectURL(file), fileName);
             },
 

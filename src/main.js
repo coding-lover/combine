@@ -2,36 +2,20 @@ import Vue from 'vue';
 import App from './App.vue';
 import router from './router';
 import ElementUI from 'element-ui';
-import VueI18n from 'vue-i18n';
-import { messages } from './components/common/i18n';
 import 'element-ui/lib/theme-chalk/index.css'; // 默认主题
-// import './assets/css/theme-green/index.css'; // 浅绿色主题
 import './assets/css/icon.css';
-import './components/common/directives';
 import 'babel-polyfill';
-import JsonViewer from 'vue-json-viewer'
 import FormCreate from '@form-create/element-ui';
 
-import 'prismjs';
-import 'prismjs/components/prism-markup-templating.min';
-import Prism from 'vue-prismjs'
-import 'prismjs/themes/prism-okaidia.css'
-Vue.component("prism", Prism);
 
 Vue.config.productionTip = false;
 Vue.use(FormCreate);
-Vue.use(JsonViewer);
-Vue.use(VueI18n);
 Vue.use(ElementUI, {
     size: 'small'
 });
-const i18n = new VueI18n({
-    locale: 'zh',
-    messages
-});
 
 //使用钩子函数对路由进行权限跳转
-router.beforeEach((to, from, next) => {
+/*router.beforeEach((to, from, next) => {
     document.title = `${to.meta.title} | vue-manage-system`;
     const role = localStorage.getItem('ms_username');
     if (0 && !role && to.path !== '/login') {
@@ -49,11 +33,10 @@ router.beforeEach((to, from, next) => {
             next();
         }
     }
-});
+});*/
 
 new Vue({
     router,
-    i18n,
     mounted: () => {
         console.log('vue mounted .........');
     },
