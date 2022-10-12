@@ -189,6 +189,9 @@
 </template>
 <script>
     import ElTableDraggable from 'element-ui-el-table-draggable';
+    const iconv = require('iconv-lite');
+    const jschardet = require("jschardet")
+
 
     export default {
         data() {
@@ -413,7 +416,7 @@
                 return new Promise((resolve, reject) => {
                     let fileReader = new FileReader();
                     fileReader.onloadend =  (event) => {
-
+                        console.warn(event)
                         resolve(callback(event.target.result));
                     };
 
@@ -527,8 +530,13 @@
                 node.fileList.map(file => {
                     let fileReader = new FileReader();
                     fileReader.onload =  (event) => {
-                        //console.log(event.target.result)
-                        let content = event.target.result.replaceAll(node.search, node.replace);
+                        console.log(file)
+                        console.log(event.target.result)
+                        console.error(this.detectCharset(event.target.result))
+
+                        let charset = this.detectCharset(event.target.result);
+                        let content = iconv.decode(event.target.result, charset).replaceAll(node.search, node.replace);
+
                         console.info("replace: " + content);
                         file.raw = new File([content], file.name, {
                             name: file.name,
@@ -543,15 +551,32 @@
                         });
                     };
 
-                    fileReader.readAsText(file.raw);
+                    //fileReader.readAsText(file.raw);
+                    //fileReader.readAsArrayBuffer(file.raw);
+                    fileReader.readAsBinaryString(file.raw);
 
                 });
+            },
+
+            detectCharset(binaryStr) {
+                let collect = jschardet.detectAll(binaryStr);
+                let result = '';
+                let confidence = 0;
+                for(let idx in collect) {
+                    if(collect[idx].confidence > confidence) {
+                        result = collect[idx].encoding;
+                        confidence = collect[idx].confidence;
+                    }
+                }
+
+                return result;
             },
 
             downloadFileByContent(content, fileName) {
                let file = new File([content], fileName, {
                    type: 'text/plain',
                });
+               console.warn(file)
                this.downloadBlob(URL.createObjectURL(file), fileName);
             },
 
