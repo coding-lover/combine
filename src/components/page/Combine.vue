@@ -329,6 +329,8 @@
         },
         mounted() {
             this.initNodeList();
+
+            console.log(iconv.encodingExists('windows-1252'));
         },
 
         methods: {
@@ -563,6 +565,7 @@
                 let collect = jschardet.detectAll(binaryStr);
                 let result = '';
                 let confidence = 0;
+                console.error(collect);
                 for(let idx in collect) {
                     if(collect[idx].confidence > confidence) {
                         result = collect[idx].encoding;
