@@ -573,6 +573,10 @@
                     }
                 }
 
+                if(['TIS-620', 'windows-1252'].indexOf(result) != -1) {
+                    result = 'gbk';
+                }
+
                 return result;
             },
 
