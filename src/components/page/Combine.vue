@@ -565,7 +565,7 @@
                 let collect = jschardet.detectAll(binaryStr);
                 let result = '';
                 let confidence = 0;
-                console.error(collect);
+
                 for(let idx in collect) {
                     if(collect[idx].confidence > confidence) {
                         result = collect[idx].encoding;
@@ -574,8 +574,10 @@
                 }
 
                 if(['TIS-620', 'windows-1252'].indexOf(result) != -1) {
-                    result = 'gbk';
+                    result = 'GBK';
                 }
+
+                console.error(collect, result);
 
                 return result;
             },
