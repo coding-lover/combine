@@ -1,0 +1,40 @@
+{
+  "name": "kit-test",
+  "version": "4.2.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm run serve",
+    "serve": "vue-cli-service serve --mode prod",
+    "build": "vue-cli-service build",
+    "build:alpha": "vue-cli-service build --mode alpha",
+    "build:prod": "NODE_ENV=production vue-cli-service build",
+    "build:test": "cross-env NODE_ENV=production webpack --progress --hide-modules"
+  },
+  "dependencies": {
+    "@form-create/element-ui": "^1.0.20",
+    "axios": "^0.18.0",
+    "babel-polyfill": "^6.26.0",
+    "cross-env": "^7.0.3",
+    "element-ui": "^2.15.10",
+    "element-ui-el-table-draggable": "^1.2.10",
+    "mavon-editor": "^2.6.17",
+    "prismjs": "^1.23.0",
+    "vue": "^2.6.10",
+    "vue-cropperjs": "^3.0.0",
+    "vue-i18n": "^8.10.0",
+    "vue-json-viewer": "^2.2.17",
+    "vue-prism": "^1.0.5",
+    "vue-prism-component": "^1.2.0",
+    "vue-prismjs": "^1.2.0",
+    "vue-quill-editor": "^3.0.6",
+    "vue-router": "^3.0.3",
+    "vue-schart": "^2.0.0",
+    "vuedraggable": "^2.17.0"
+  },
+  "devDependencies": {
+    "@vue/cli-plugin-babel": "^3.9.0",
+    "@vue/cli-service": "^3.9.0",
+    "vue-template-compiler": "^2.6.10",
+    "webpack-cli": "^4.3.1"
+  }
+}
