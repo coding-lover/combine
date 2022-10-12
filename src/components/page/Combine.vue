@@ -417,10 +417,11 @@
                     let fileReader = new FileReader();
                     fileReader.onloadend =  (event) => {
                         console.warn(event)
-                        resolve(callback(event.target.result));
+                        console.warn(this.detectCharset(event.target.result))
+                        resolve(callback(this.fileContentDecode(event.target.result)));
                     };
 
-                    fileReader.readAsText(file.raw);
+                    fileReader.readAsBinaryString(file.raw);
                 });
             },
             fileConfigAdd() {
@@ -527,20 +528,13 @@
                 let replaceKey = this.createReplaceKey(node.search, node.replace);
                 node.replaceHis.push(replaceKey);
 
+                let promiseList = [];
                 node.fileList.map(file => {
-                    let fileReader = new FileReader();
-                    fileReader.onload =  (event) => {
-                        console.log(file)
-                        console.log(event.target.result)
-                        console.error(this.detectCharset(event.target.result))
-
-                        let charset = this.detectCharset(event.target.result);
-                        let content = iconv.decode(event.target.result, charset).replaceAll(node.search, node.replace);
-
-                        console.info("replace: " + content);
-                        file.raw = new File([content], file.name, {
+                    let p = this.readFile(file, res => {
+                        res = res.replaceAll(node.search, node.replace);
+                        file.raw = new File([res], file.name, {
                             name: file.name,
-                            size: content.length,
+                            size: res.length,
                             type: file.type,
                             lastModified: file.lastModified,
                         });
@@ -549,13 +543,20 @@
                             message: file.name + ' 替换成功',
                             type: 'success'
                         });
-                    };
 
-                    //fileReader.readAsText(file.raw);
-                    //fileReader.readAsArrayBuffer(file.raw);
-                    fileReader.readAsBinaryString(file.raw);
+                        return res;
+                    });
 
+                    promiseList.push(p);
                 });
+
+                Promise.all([...promiseList]).then(res => {
+                    console.log('replace res: ', res);
+                });
+            },
+
+            fileContentDecode(binaryStr) {
+                return iconv.decode(binaryStr, this.detectCharset(binaryStr));
             },
 
             detectCharset(binaryStr) {
