@@ -5,11 +5,9 @@ import ElementUI from 'element-ui';
 import 'element-ui/lib/theme-chalk/index.css'; // 默认主题
 import './assets/css/icon.css';
 import 'babel-polyfill';
-import FormCreate from '@form-create/element-ui';
 
 
 Vue.config.productionTip = false;
-Vue.use(FormCreate);
 Vue.use(ElementUI, {
     size: 'small'
 });
