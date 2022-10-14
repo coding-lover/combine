@@ -9,7 +9,7 @@
     "build": "tauri build",
     "build:web": "vue-cli-service build",
     "build:alpha": "vue-cli-service build --mode alpha",
-    "build:prod": "NODE_ENV=production vue-cli-service build",
+    "build:prod": "vue-cli-service build",
     "build:test": "echo 'No tests'"
   },
   "dependencies": {
