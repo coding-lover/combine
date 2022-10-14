@@ -7,17 +7,20 @@
     "distDir": "../dist"
   },
   "package": {
-    "productName": "隆特多文件合并",
+    "productName": "lt-file-combine",
     "version": "0.1.0"
   },
   "tauri": {
     "allowlist": {
-      "all": true
+      "shell": {
+        "open": true
+      }
     },
     "bundle": {
       "active": true,
       "category": "DeveloperTool",
-      "copyright": "",
+      "copyright": "© 2022 file combine",
+      "targets": ["dmg", "deb", "appimage", "msi"],
       "deb": {
         "depends": []
       },
@@ -40,11 +43,13 @@
       },
       "resources": [],
       "shortDescription": "",
-      "targets": "all",
       "windows": {
         "certificateThumbprint": null,
         "digestAlgorithm": "sha256",
-        "timestampUrl": ""
+        "timestampUrl": "",
+        "wix": {
+          "language": "zh-CN"
+        }
       }
     },
     "security": {
