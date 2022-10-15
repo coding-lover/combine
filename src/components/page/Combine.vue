@@ -183,6 +183,153 @@
                     </el-col>
 
                 </el-tab-pane>
+
+                <el-tab-pane label="文件合并" name="third" style="margin-top: 10px;" class="third-box">
+                    <el-col :span="10">
+                        <el-card class="box-card" shadow="never" >
+                            <span class="box-card-title">要串联的程式</span>
+
+                            <div class="content-overflow">
+                                <el-upload
+                                        class="upload-demo"
+                                        drag
+                                        :ref="createUploadKey(specialBoxKey)"
+                                        action=""
+                                        :on-preview="handlePreview"
+                                        :on-remove="handleRemove(specialBoxKey)"
+                                        :on-progress="handleProgress"
+                                        :on-change="myHandleChange(specialBoxKey)"
+                                        :auto-upload="false"
+                                        :file-list="specialBoxFileList"
+                                        multiple>
+                                    <i class="el-icon-upload" v-show="specialBoxFileList.length == 0"></i>
+                                    <div class="el-upload__text" v-show="specialBoxFileList == 0">将文件拖到此处，或<em>点击上传</em></div>
+                                </el-upload>
+                            </div>
+                            <div class="box-operator clearfix">
+                                <el-col :span="12">
+                                    <el-badge :value="specialBoxNum" class="large-btn" :hidden="specialBoxNum > 0 ? false : true" >
+                                        <el-button type="primary" v-show="form.ready" size="medium" class="large-btn" @click="combineFile">合并</el-button>
+                                        <el-button v-show="!form.ready" type="primary"  size="medium" class="large-btn" :loading="true">合并中</el-button>
+                                    </el-badge>
+                                </el-col>
+                                <el-col :span="12"><el-button type="danger" size="medium" class="large-btn" @click="clearBoxFileList">清空</el-button></el-col>
+                            </div>
+
+                        </el-card>
+                    </el-col>
+
+                    <el-col :span="14">
+                        <el-form ref="form" :rules="formRules" :model="form" label-width="150px">
+                            <el-form-item label="使用替换">
+                                <el-switch v-model="form.delivery">
+                                </el-switch>
+                                <span style="color: #F56C6C;margin-left: 5px;display: inline-block;">使用已经替换的文件或者重新上传文件</span>
+                            </el-form-item>
+
+                            <el-form-item label="文件头删除行数" prop="fileHeaderDeletedLine">
+                                <el-select v-model="form.fileHeaderDeletedLine"  placeholder="请选择" >
+                                    <el-option
+                                            v-for="num in 20"
+                                            :key="num"
+                                            :label="num"
+                                            :value="num">
+                                    </el-option>
+                                </el-select>
+                            </el-form-item>
+
+                            <el-form-item label="文件尾删除行数" prop="fileFooterDeletedLine">
+                                <el-select v-model="form.fileFooterDeletedLine"  placeholder="请选择" >
+                                    <el-option
+                                            v-for="num in 20"
+                                            :key="num"
+                                            :label="num"
+                                            :value="num">
+                                    </el-option>
+                                </el-select>
+                            </el-form-item>
+
+                            <el-form-item label="文件头增加" prop="fileHeader">
+                                <el-input type="textarea" v-model="form.fileHeader"></el-input>
+                            </el-form-item>
+
+
+                            <el-form-item label="文件尾增加" prop="fileFooter" class="clearfix">
+                                <el-col :span="14">
+                                    <el-input type="textarea" v-model="form.fileFooter" :autosize="{ minRows: 6}"></el-input>
+                                </el-col>
+
+                                <el-col :span="10">
+                                    <el-input placeholder="模板名" class="margin-bottom-10" v-model="form.templateName"></el-input>
+
+                                    <el-button icon="el-icon-document" @click="showTemplate">选择模板</el-button>
+                                    <el-button icon="el-icon-document-add" type="primary" plain @click="saveTemplate">保存模板</el-button>
+                                </el-col>
+                            </el-form-item>
+
+                            <el-form-item label="串联程式新名" prop="fileName">
+                                <el-input placeholder="串联程式新名" v-model="form.fileName" class="input-with-select">
+                                    <el-select v-model="form.fileSuffix" slot="append" placeholder="请选择" prop="fileSuffix">
+                                        <el-option
+                                                v-for="item in form.fileSuffixOptions"
+                                                :key="item.value"
+                                                :label="item.name"
+                                                :value="item.value">
+                                        </el-option>
+                                    </el-select>
+                                </el-input>
+
+                            </el-form-item>
+
+                            <el-form-item label="文件保存路径" prop="filePath">
+                                <el-input placeholder="文件保存路径" v-model="form.filePath" class="input-with-select" readonly >
+
+                                </el-input>
+                                <input type='file' @change="triggerFile($event)" webkitdirectory />
+                            </el-form-item>
+
+                            <el-form-item>
+                                <!--<el-button v-show="form.ready" type="primary" @click="combineFile">立即合并</el-button>
+                                <el-button v-show="!form.ready" type="primary" :loading="true">合并中</el-button>
+                                <el-button @click="formReset()">取消</el-button>-->
+                            </el-form-item>
+                        </el-form>
+                    </el-col>
+
+                    <el-dialog title="选择文件尾模板" :visible.sync="dialogFormVisible">
+                        <el-form >
+                            <div v-for="(item,key) in getTemplate">
+                                <el-form-item label="" prop="fileName">
+                                    <el-col :span="10">
+                                        <el-radio v-model="form.selectedTemplate" :label="key" border class="s-radio">
+                                            <el-input   placeholder="模板名称" v-model="item.name" class="s-input"></el-input>
+                                        </el-radio>
+
+                                    </el-col>
+
+                                    <el-col :span="13">
+                                        <el-input placeholder="文件尾增加内容" v-model="item.value" type="textarea" :autosize="{ minRows: 6}">
+
+                                        </el-input>
+
+                                    </el-col>
+                                    <el-col :span="1"  title="删除" >
+                                        <i class="el-icon-close t-close" @click="deleteTemplate(key)"></i>
+                                    </el-col>
+
+                                </el-form-item>
+                                <el-divider class="clearfix"></el-divider>
+                            </div>
+
+                        </el-form>
+
+                        <div slot="footer" class="dialog-footer">
+                            <el-button  @click="addTemplate">增 加</el-button>
+                            <el-button type="primary" @click="dialogSaveTemplate">保 存</el-button>
+                        </div>
+                    </el-dialog>
+
+                </el-tab-pane>
             </el-tabs>
         </el-col>
     </el-row>
@@ -196,23 +343,33 @@
     export default {
         data() {
             return {
-                activeName: 'first',
+                activeName: 'third',
+                dialogFormVisible: false,
                 fileList: [],
                 tmpFileNames: [],
                 nodeList: [],
                 nodeNum: 2,
                 replaceHis: [],
                 specialFileList: [],
+                specialBoxFileList: [
+                ],
                 specialKey: 99,
+                specialBoxKey: 98,
                 form: {
                     fileHeader: '',
                     fileFooter: '',
                     fileName: '',
+                    filePath: '',
+                    fileHeaderDeletedLine: 1,
+                    fileFooterDeletedLine: 1,
                     fileSuffix: ".nc",
                     fileSuffixOptions: [
                         {value: ".nc", name: ".nc"},
                         {value: ".pim", name: ".pim"},
                     ],
+                    templateList: [],
+                    selectedTemplate: 0,
+                    templateName: '',
                     ready: true,
                     delivery: true,
                 },
@@ -260,6 +417,10 @@
                     fileSuffix: [
                         { required: true, message: '请选择文件后缀', trigger: 'change' }
                     ],
+                    filePath: [
+                        { required: true, message: '请选择文件路径', trigger: 'blur' }
+                    ],
+
                 }
             };
         },
@@ -289,6 +450,14 @@
             specialNum: function() {
                 return this.specialFileList.length;
             },
+            specialBoxNum: function() {
+                return this.specialBoxFileList.length;
+            },
+
+            getTemplate: function() {
+                return this.form.templateList;
+            },
+
             getFileList: {
                 get() {
                     let fileList = [];
@@ -318,6 +487,7 @@
                 };
             },
         },
+
         watch: {
             //nodeList: {
             // immediate: true,
@@ -326,14 +496,102 @@
             //
             // }
             //},
+            "form.selectedTemplate": {
+                immediate: false,
+                handler(value) {
+                    this.selectTemplate(value);
+                },
+            }
+        },
+        created() {
+            //this.initParams();
         },
         mounted() {
             this.initNodeList();
-
-            console.log(iconv.encodingExists('windows-1252'));
+            this.initParams();
         },
 
         methods: {
+            triggerFile(event) {
+                console.log(event.target.files)
+            },
+            deleteTemplate(idx)  {
+
+                this.form.templateList = this.form.templateList.filter((t,key) => {return key != idx;});
+                console.log(this.form.templateList.length)
+                console.log(this.form.templateList)
+                if(this.form.templateList == null) {
+                    this.form.templateList = [];
+                }
+            },
+            initParams() {
+                let formCache = JSON.parse(localStorage.getItem('form'));
+                console.log(formCache)
+                if(formCache != null) {
+                    for(let key in formCache) {
+                        this.form[key] = formCache[key];
+                    }
+                }
+            },
+            dialogSaveTemplate() {
+                this.updateLocalStorage();
+                this.dialogFormVisible = false;
+                this.selectTemplate(this.form.selectedTemplate);
+            },
+            updateLocalStorage() {
+                localStorage.setItem('form', JSON.stringify(this.form));
+            },
+            selectTemplate(idx) {
+                this.form.templateList = this.form.templateList.filter(t => t); // remove null
+                if(!this.form.templateList.hasOwnProperty(idx)) {
+                    return false;
+                }
+
+                let cur = this.form.templateList[idx];
+                this.form.fileFooter = cur.value;
+                this.form.templateName = cur.name;
+            },
+
+            addTemplate() {
+                let template = {name: '', value: ''};
+                this.form.templateList.push(template);
+            },
+
+            showTemplate() {
+                this.dialogFormVisible = true;
+            },
+
+
+            saveTemplate() {
+                let template = {
+                    value: this.form.fileFooter,
+                    name: this.form.templateName,
+                };
+
+                if(!template.value) {
+                    this.$message.info('请输入文件尾内容');
+                    return false;
+                }
+
+                if(!template.name) {
+                    this.$message.info('请输要保存模板名称');
+                    return false;
+                }
+
+                for(let idx in this.form.templateList)  {
+                    if(this.form.templateList[idx].name == template.name) {
+                        this.form.templateList[idx].value = template.value;
+                        this.$message.success('模板保存成功');
+                        return  false;
+                    }
+                }
+
+                this.form.templateList.push(template);
+            },
+
+            clearBoxFileList() {
+                this.specialBoxFileList = [];
+            },
             combineFile() {
                 this.$refs['form'].validate((valid) => {
                     if (!valid) {
@@ -632,14 +890,16 @@
             handleRemove(idx) {
                 return (file, fileList) => {
                     console.log(file, fileList)
-                    for(var key in fileList) {
+                    /*for(var key in fileList) {
                         if(file.name == fileList[key].name) {
                             return false;
                         }
-                    }
+                    }*/
 
                     if(idx == this.specialKey) {
                         this.specialFileList = fileList;
+                    } else if(idx == this.specialBoxKey) {
+                        this.specialBoxFileList = fileList;
                     } else {
                         this.nodeList[idx].fileNum--;
                         this.nodeList[idx].fileList = fileList;
@@ -672,7 +932,7 @@
                         console.log(this.createUploadKey(idx))
                         console.log(this.$refs[this.createUploadKey(idx)])
 
-                        if(idx == this.specialKey) {
+                        if(idx == this.specialKey || idx == this.specialBoxKey) {
                             this.$refs[this.createUploadKey(idx)].handleRemove(file, file.raw);
                         } else {
                             this.$refs[this.createUploadKey(idx)][0].handleRemove(file, file.raw);
@@ -690,6 +950,9 @@
                         //debugger
                         this.specialFileList = fileList;
                         console.log(this.specialFileList)
+                    } else if(idx == this.specialBoxKey) {
+                        this.specialBoxFileList = fileList;
+                        console.log(fileList)
                     } else {
                         this.nodeList[idx].fileNum++;
                         this.nodeList[idx].fileList = fileList;
@@ -945,6 +1208,80 @@
 
     .el-upload--text {
         border: 0;
+    }
+
+    .third-box {
+        margin-top: 10px;
+    }
+
+    .third-box .box-card{
+        background: #eff1f5;
+    }
+
+    .third-box .el-card__body{
+        padding: 10px;
+    }
+
+    .third-box .content-overflow {
+        background: white;
+        height: 450px;
+        margin-top: 5px;
+        border-radius: 5px;
+    }
+
+    .third-box .box-operator {
+        margin-top: 15px;
+    }
+
+    .third-box .upload-demo,.el-upload {
+        width: 100%;
+        height: 100%;
+    }
+
+    .third-box .upload-demo .el-icon-close {
+        position: absolute;
+        z-index: 999;
+        display: block;
+    }
+
+    .third-box .upload-demo .el-upload-list__item-status-label {
+        z-index: 998;
+        display: none;
+    }
+
+    .third-box .special-input {
+        width: auto;
+    }
+
+    .third-box .search {
+        width: 130px;
+    }
+
+    .third-box .s-input {
+        width: 90%;
+    }
+
+    .third-box .s-radio {
+        width: 100%;
+        height: 50px;
+    }
+
+    .third-box .t-close {
+        font-size: 20px;
+        margin-top: -10px;
+    }
+    .third-box .t-close i{
+        display: inline-block;
+        width: 100%;
+        height: 100%;
+    }
+
+   .third-box .box-card-title {
+        display: block;
+        position: absolute;
+        top: 0px;
+        z-index: 999;
+        background: #eff1f5;
     }
 
 </style>
