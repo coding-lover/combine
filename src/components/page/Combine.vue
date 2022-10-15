@@ -282,10 +282,10 @@
                             </el-form-item>
 
                             <el-form-item label="文件保存路径" prop="filePath">
+                                <input ref="dirSearch" type="file" id="file1" hidden @change="fileChange" webkitdirectory>
                                 <el-input placeholder="文件保存路径" v-model="form.filePath" class="input-with-select" readonly >
-
+                                    <el-button slot="append" icon="el-icon-folder" type="success" @click="btnChange"></el-button>
                                 </el-input>
-                                <input type='file' @change="triggerFile($event)" webkitdirectory />
                             </el-form-item>
 
                             <el-form-item>
@@ -294,6 +294,7 @@
                                 <el-button @click="formReset()">取消</el-button>-->
                             </el-form-item>
                         </el-form>
+
                     </el-col>
 
                     <el-dialog title="选择文件尾模板" :visible.sync="dialogFormVisible">
@@ -512,6 +513,22 @@
         },
 
         methods: {
+            fileChange(e) {
+                try {
+                    console.log(e.target.files);
+                    alert(e.target.files[0].webkitRelativePath);
+                    const fu = document.getElementById('file')
+                    if (fu == null) return
+                    this.form.imgSavePath = fu.files[0].path
+                    console.log(fu.files[0].path)
+                } catch (error) {
+                    console.debug('choice file err:', error)
+                }
+            },
+            btnChange() {
+                this.$refs.dirSearch.click();
+            },
+
             triggerFile(event) {
                 console.log(event.target.files)
             },
