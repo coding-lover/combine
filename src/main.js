@@ -5,7 +5,8 @@ import ElementUI from 'element-ui';
 import 'element-ui/lib/theme-chalk/index.css'; // 默认主题
 import './assets/css/icon.css';
 import 'babel-polyfill';
-
+import VFolder from 'v-folder';
+Vue.use(VFolder);
 
 Vue.config.productionTip = false;
 Vue.use(ElementUI, {

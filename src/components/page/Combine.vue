@@ -1,33 +1,34 @@
 <template>
     <el-row :gutter="10">
-        <el-col :span="18" :offset="3" class="wrap">
+        <el-col :span="24" :offset="0" class="wrap">
             <el-tabs v-model="activeName" @tab-click="handleClick">
 
                 <el-tab-pane  name="first" class="wrap-padding">
-                    <span slot="label">文件替换<el-badge :value="totalNum" class="large-btn" :hidden="totalNum > 0 ? false : true" ></el-badge></span>
+                    <span slot="label">程式替换<el-badge :value="totalNum" class="large-btn" :hidden="totalNum > 0 ? false : true" ></el-badge></span>
 
                     <el-col :span="12" class="margin-bottom-10" v-for="(item, idx) in nodeList">
                         <el-card class="box-card">
                             <div slot="header" class="clearfix">
-                                <el-col :span="6">
-                                    <el-input v-model="item.search" prefix-icon="el-icon-search" placeholder="要替换字符"></el-input>
+                                <el-col :span="5">
+                                    <el-input v-model="item.search" prefix-icon="el-icon-search" placeholder="查找"></el-input>
                                 </el-col>
-                                <el-col :span="6">
-                                    <el-input v-model="item.replace" prefix-icon="el-icon-edit" placeholder="替换后字符"></el-input>
+                                <el-col :span="5">
+                                    <el-input v-model="item.replace" prefix-icon="el-icon-edit" placeholder="替换"></el-input>
                                 </el-col>
                                 <el-badge :value="item.fileNum" class="" :hidden="item.fileNum > 0 ? false : true">
                                     <el-button v-show="!replaceFlag(idx)" size="small" class="ml-3" type="primary"
                                                @click="doReplace(idx)">替换
                                     </el-button>
                                     <el-button v-show="replaceFlag(idx)" class="ml-3" size="small" type="success">已替换</el-button>
-                                    <el-button size="small" type="success" class="ml-3" @click="getReplaceHis(idx)">替换历史</el-button>
                                 </el-badge>
                                 <el-button size="small" type="primary" class="margin-left-3" @click="downloadFile(idx)">下载</el-button>
+                                <el-button size="small" type="danger" class="margin-left-3" @click="clearSearchReplace(idx)">清空</el-button>
+                                <el-button size="small" type="success" class="ml-3" @click="getReplaceHis(idx)">替换历史</el-button>
 
                             </div>
                             <div class="content-overflow">
                                 <el-upload
-                                        class="upload-demo"
+                                        class="sr-upload-demo"
                                         drag
                                         :ref="createUploadKey(idx)"
                                         action=""
@@ -35,7 +36,6 @@
                                         :on-remove="handleRemove(idx)"
                                         :on-progress="handleProgress"
                                         :on-change="myHandleChange(idx)"
-                                        :file-list="fileList"
                                         :auto-upload="false"
                                         multiple>
                                     <i class="el-icon-upload" v-show="item.fileNum == 0"></i>
@@ -67,7 +67,7 @@
                 </el-tab-pane>
 
 
-                <el-tab-pane label="文件合并" name="second">
+                <!--<el-tab-pane label="文件合并" name="second" v-show="false">
                     <el-col :span="10">
                         <el-form ref="form" :rules="formRules" :model="form" label-width="90px">
                             <el-form-item label="使用替换">
@@ -182,15 +182,15 @@
 
                     </el-col>
 
-                </el-tab-pane>
+                </el-tab-pane>-->
 
-                <el-tab-pane label="文件合并" name="third" style="margin-top: 10px;" class="third-box">
+                <el-tab-pane label="程式串联" name="third" style="margin-top: 10px;" class="third-box">
                     <el-col :span="10">
                         <el-card class="box-card" shadow="never" >
                             <span class="box-card-title">要串联的程式</span>
 
                             <div class="content-overflow">
-                                <el-upload
+                                <el-upload v-show="!form.delivery"
                                         class="upload-demo"
                                         drag
                                         :ref="createUploadKey(specialBoxKey)"
@@ -200,11 +200,27 @@
                                         :on-progress="handleProgress"
                                         :on-change="myHandleChange(specialBoxKey)"
                                         :auto-upload="false"
-                                        :file-list="specialBoxFileList"
+                                        :disabled="false"
                                         multiple>
                                     <i class="el-icon-upload" v-show="specialBoxFileList.length == 0"></i>
                                     <div class="el-upload__text" v-show="specialBoxFileList == 0">将文件拖到此处，或<em>点击上传</em></div>
                                 </el-upload>
+
+                                <ul class="el-upload-list el-upload-list--text" v-show="form.delivery">
+                                    <el-empty description="请在程式替换页面上传文件" v-show="getFileList.length == 0">
+                                        <el-button type="primary" plain @click="activeName='first'">去上传</el-button>
+                                    </el-empty>
+
+                                    <li tabindex="0" class="el-upload-list__item is-ready" v-for="file in getFileList">
+                                        <a class="el-upload-list__item-name"><i class="el-icon-document"></i>{{file.name}}</a>
+                                        <label class="el-upload-list__item-status-label">
+                                            <i class="el-icon-upload-success el-icon-circle-check"></i>
+                                        </label>
+                                        <i class="el-icon-close" @click="deleteNodeListFile(file.nodeIdx, file.id)"></i>
+                                        <i class="el-icon-close-tip">按 delete 键可删除</i>
+                                    </li>
+                                </ul>
+
                             </div>
                             <div class="box-operator clearfix">
                                 <el-col :span="12">
@@ -224,7 +240,7 @@
                             <el-form-item label="使用替换">
                                 <el-switch v-model="form.delivery">
                                 </el-switch>
-                                <span style="color: #F56C6C;margin-left: 5px;display: inline-block;">使用已经替换的文件或者重新上传文件</span>
+                                <span style="color: #F56C6C;margin-left: 5px;display: inline-block;">使用已经替换的程式或者重新上传程式</span>
                             </el-form-item>
 
                             <el-form-item label="文件头删除行数" prop="fileHeaderDeletedLine">
@@ -282,9 +298,8 @@
                             </el-form-item>
 
                             <el-form-item label="文件保存路径" prop="filePath">
-                                <input ref="dirSearch" type="file" id="file1" hidden @change="fileChange" webkitdirectory>
-                                <el-input placeholder="文件保存路径" v-model="form.filePath" class="input-with-select" readonly >
-                                    <el-button slot="append" icon="el-icon-folder" type="success" @click="btnChange"></el-button>
+                                <el-input placeholder="文件保存路径" v-model="form.filePath" class="input-with-select" readonly>
+                                    <el-button slot="append" icon="el-icon-folder" type="success" @click="openFolder"></el-button>
                                 </el-input>
                             </el-form-item>
 
@@ -330,6 +345,21 @@
                         </div>
                     </el-dialog>
 
+<!--                    选择文件夹-->
+                    <el-dialog title="选择保存的目录" :visible.sync="dialogFolderSelectVisible">
+                        <div>
+                            <span class="folder-select-title">当前选中: </span>
+                            <span v-show="getCurFolder.length == 0" style="color:red;">未选中文件夹</span>
+                            <span v-show="getCurFolder.length > 0">{{getCurFolder}}</span>
+                        </div>
+                        <div class="folder-content">
+                            <v-folder :data="folderData"  :ajax="ajax" :conf="folderConfig" @change="folderChange"></v-folder>
+                        </div>
+                        <div slot="footer" class="dialog-footer">
+                            <el-button type="primary" @click="dialogSaveFolder">保 存</el-button>
+                        </div>
+                    </el-dialog>
+
                 </el-tab-pane>
             </el-tabs>
         </el-col>
@@ -339,13 +369,63 @@
     import ElTableDraggable from 'element-ui-el-table-draggable';
     const iconv = require('iconv-lite');
     const jschardet = require("jschardet")
+    import { invoke } from '@tauri-apps/api';
+
 
 
     export default {
         data() {
             return {
-                activeName: 'third',
+                activeName: 'first',
+                cacheFile: 'web.conf.json',
+                folderData: {
+                    // root
+                    sourceDir: '/',
+                    // children
+                    files: [],
+                    dirs: []
+                },
+                folderData2: {
+                    sourceDir: 'root',
+                    dirs: [{
+                        sourceDir: 'subroot-1',
+                        dirs: ['empty 1', 'empty 2', 'empty 3'],
+                        files: ['file1234', 'file5678', 'filexyzw']
+                    }, {
+                        sourceDir: 'subroot-2',
+                        dirs: ['empty 1', 'empty 2', 'empty 3'],
+                        files: ['file1234', 'file5678', 'filexyzw']
+                    }, {
+                        sourceDir: 'subroot-3',
+                        dirs: ['empty 1', 'empty 2', 'empty 3'],
+                        files: ['file1234', 'file5678', 'filexyzw']
+                    }],
+                    files: ['a.js', 'b.js', 'c.js']
+                },
+
+                folderConfig: {
+                    // tree node name
+                    node: 'sourceDir',
+                    // KEY NAME of dirs/branches/parents etc.. .
+                    branch: 'dirs',
+                    // KEY NAME of  files/leafs/children etc...
+                    leaf: 'files'
+                },
+                ajax: (node) => {
+
+                    return this.readFolder(node);
+
+                    console.log(node)
+                    return {
+                        sourceDir: 'subroot-99',
+                        dirs: ["xxx", 'empty 2', 'empty 3'], ///仅支持当前层
+                        files: ['file1234', 'file5678', 'filexyzw']
+                    }
+                },
+
+                dialogFolderSelectVisible: false,
                 dialogFormVisible: false,
+                selectedFolder: [],
                 fileList: [],
                 tmpFileNames: [],
                 nodeList: [],
@@ -429,6 +509,9 @@
             ElTableDraggable
         },
         computed: {
+            getCurFolder: function() {
+                return this.selectedFolder.join(',');
+            },
             replaceFlag: function () {
                 return (idx) => {
                     if (!this.nodeList.hasOwnProperty(idx)) {
@@ -473,7 +556,7 @@
                         });
                     } else {
                         //debugger
-                        fileList.push(...this.specialFileList);
+                        //fileList.push(...this.specialFileList);
                     }
 
                     return fileList;
@@ -513,20 +596,119 @@
         },
 
         methods: {
-            fileChange(e) {
-                try {
-                    console.log(e.target.files);
-                    alert(e.target.files[0].webkitRelativePath);
-                    const fu = document.getElementById('file')
-                    if (fu == null) return
-                    this.form.imgSavePath = fu.files[0].path
-                    console.log(fu.files[0].path)
-                } catch (error) {
-                    console.debug('choice file err:', error)
-                }
+            deleteNodeListFile(nodeIdx, fileId) {
+                let fileList = this.nodeList[nodeIdx].fileList.slice(0);
+                fileList.map(file => {
+                    if(file.id == fileId) {
+                        this.closeUploadedFile(nodeIdx, file, true)
+                    }
+                });
             },
-            btnChange() {
-                this.$refs.dirSearch.click();
+            dialogSaveFolder() {
+                this.dialogFolderSelectVisible = false;
+                this.form.filePath = this.selectedFolder.join(',');
+                this.updateLocalStorage();
+            },
+            openFolder() {
+                this.dialogFolderSelectVisible = true;
+            },
+            basename(str) {
+                var idx = str.lastIndexOf('/')
+                idx = idx > -1 ? idx : str.lastIndexOf('\\')
+                if (idx < 0) {
+                    return str
+                }
+                return str.substring(idx + 1);
+            },
+
+            readFolder(node) {
+                return this.wmcReadDir(node.path).then(res => {
+                    let realPath = {
+                        sourceDir: this.basename(node.path),
+                        dirs: [], ///仅支持当前层
+                        files: []
+                    };
+                    res.map(item => {
+                        if(item.is_dir) {
+                            realPath.dirs.push(this.basename(item.path));
+                        }
+                    });
+
+                    return realPath;
+                });
+            },
+
+            writeContent(path, content) {
+                return this.wmcReadDir(node.path).then(res => {
+                    let realPath = {
+                        sourceDir: this.basename(node.path),
+                        dirs: [], ///仅支持当前层
+                        files: []
+                    };
+                    res.map(item => {
+                        if(item.is_dir) {
+                            realPath.dirs.push(this.basename(item.path));
+                        }
+                    });
+
+                    return realPath;
+                });
+            },
+
+            folderChange(value) {
+                console.warn(value)
+                this.selectedFolder = value;
+            },
+
+            wmcReadDir(path) {
+                return invoke('wmc_read_dir', { path: path }).then(res => {
+                    console.log(res)
+
+                    let content = JSON.parse(res)
+                    if(!content || content.length == 0) {
+                        return [];
+                    }
+
+                    console.warn(content)
+                    content = content.map(item => {
+                        let parsed = item.split(',');
+                        return {
+                            path: parsed[0],
+                            is_dir: parsed[1] == 'true' ? true : false,
+                        };
+                    });
+
+                    return content;
+                });
+            },
+
+            wmcWrite(path, content) {
+                return invoke('wmc_write', { path: path , content: content}).then(res => {
+                    console.log('wmc_write: ' + res)
+
+                    return JSON.parse(res);
+                });
+            },
+
+            //保存到本地文件
+            cacheRead() {
+                return this.wmcRead(this.cacheFile);
+            },
+
+            cacheWrite(json) {
+                this.cacheRead().then(res => {
+                    res = typeof res == 'object' ? res : {};
+                    res = Object.assign({}, res, json);
+                    this.wmcWrite(this.cacheFile, JSON.stringify(res))
+                })
+            },
+
+            wmcRead(path) {
+                return invoke('wmc_read', { path: path}).then(res => {
+                    console.log('wmc_read: ' + res)
+
+                    return res;
+                });
             },
 
             triggerFile(event) {
@@ -542,13 +724,19 @@
                 }
             },
             initParams() {
-                let formCache = JSON.parse(localStorage.getItem('form'));
-                console.log(formCache)
-                if(formCache != null) {
-                    for(let key in formCache) {
-                        this.form[key] = formCache[key];
+                this.cacheRead().then(res => {
+                    if(!res) {
+                        return "";
                     }
-                }
+
+                    let formCache = JSON.parse(res);
+                    console.log(formCache)
+                    if(formCache != null) {
+                        for(let key in formCache) {
+                            this.form[key] = formCache[key];
+                        }
+                    }
+                });
             },
             dialogSaveTemplate() {
                 this.updateLocalStorage();
@@ -556,7 +744,8 @@
                 this.selectTemplate(this.form.selectedTemplate);
             },
             updateLocalStorage() {
-                localStorage.setItem('form', JSON.stringify(this.form));
+                //localStorage.setItem('form', JSON.stringify(this.form));
+                this.cacheWrite(this.form)
             },
             selectTemplate(idx) {
                 this.form.templateList = this.form.templateList.filter(t => t); // remove null
@@ -578,7 +767,6 @@
                 this.dialogFormVisible = true;
             },
 
-
             saveTemplate() {
                 let template = {
                     value: this.form.fileFooter,
@@ -599,17 +787,95 @@
                     if(this.form.templateList[idx].name == template.name) {
                         this.form.templateList[idx].value = template.value;
                         this.$message.success('模板保存成功');
+                        this.updateLocalStorage();
                         return  false;
                     }
                 }
 
                 this.form.templateList.push(template);
+                this.updateLocalStorage();
             },
 
-            clearBoxFileList() {
-                this.specialBoxFileList = [];
-            },
             combineFile() {
+                this.$refs['form'].validate((valid) => {
+                    if (!valid) {
+                        return false;
+                    }
+
+                    let rawList = [];
+                    let rawIds = [];
+
+                    if(this.form.delivery) {
+                        this.nodeList.map(node => {
+                            node.fileList.map(file => {
+                                rawIds.push(file.id);
+                                rawList.push(file);
+                            });
+                        });
+                    } else {
+                        rawList.push(...this.specialFileList);
+                        rawList.push(...this.specialBoxFileList);
+                    }
+
+                    if(rawList.length == 0) {
+                        this.$message.info('请上传要合并的文件');
+                        return false;
+                    }
+
+                    let promiseList = [];
+                    rawList.map(file => {
+                        //debugger
+                        /*if(this.form.delivery && rawIds.indexOf(file.id) == -1) {
+                            return false;
+                        }
+
+                        if(!this.form.delivery && rawIds.indexOf(file.id) != -1) {
+                            return false;
+                        }*/
+
+                        let p = this.readFile(file, res => {
+                            res = res.split("\n").filter(res => res);
+                            res.splice(0, file.headerDeleteLine);
+                            res.splice(res.length - file.footerDeleteLine, file.footerDeleteLine);
+                            return res.join("\n");
+                        });
+
+                        promiseList.push(p);
+                    });
+
+                    if(promiseList.length == 0) {
+                        this.$message.info('请上传要合并的文件11');
+                        return false;
+                    }
+
+                    this.form.ready = false;
+                    Promise.all([...promiseList]).then(res => {
+                        console.log(res)
+                        res.unshift(this.form.fileHeader);
+                        res.push(this.form.fileFooter);
+                        res = res.filter(res => res);
+                        res = res.join("\n");
+
+                        console.log(res)
+                        this.form.ready = true;
+                        //this.downloadFileByContent(res, this.form.fileName + this.form.fileSuffix);
+                        this.wmcWrite(this.getFormFilePath(), res).then(res => {
+                            console.log('合并结果', res);
+                            if(res) {
+                                this.$message.success("合并成功，文件：" + this.getFormFilePath());
+                                this.updateLocalStorage();
+                                return true;
+                            }
+
+                            this.$message.error("合并失败，文件：" + this.getFormFilePath() + ', 请检查文件路径是否存在或者是否有写入权限');
+                        })
+                    });
+
+                    console.log('content')
+                });
+            },
+
+            combineFile_bak() {
                 this.$refs['form'].validate((valid) => {
                     if (!valid) {
                         return false;
@@ -625,26 +891,27 @@
                     });
 
                     rawList.push(...this.specialFileList);
+                    rawList.push(...this.specialBoxFileList);
 
                     if(this.dragList.length != rawList.length) {
                         this.dragList = rawList;
                     }
 
                     if(this.dragList.length == 0) {
-                        this.$message.info('请上传要合并的文件');
+                        this.$message.info('请上传要合并的文件11');
                         return false;
                     }
 
                     let promiseList = [];
                     this.dragList.map(file => {
                         //debugger
-                        if(this.form.delivery && rawIds.indexOf(file.id) == -1) {
+                        /*if(this.form.delivery && rawIds.indexOf(file.id) == -1) {
                             return false;
                         }
 
                         if(!this.form.delivery && rawIds.indexOf(file.id) != -1) {
                             return false;
-                        }
+                        }*/
 
                         let p = this.readFile(file, res => {
                             res = res.split("\n").filter(res => res);
@@ -657,7 +924,7 @@
                     });
 
                     if(promiseList.length == 0) {
-                        this.$message.info('请上传文件');
+                        this.$message.info('请上传文件33');
                         return false;
                     }
 
@@ -671,12 +938,24 @@
 
                         console.log(res)
                         this.form.ready = true;
-                        this.downloadFileByContent(res, this.form.fileName + this.form.fileSuffix);
-                        this.$message.success("合并成功，文件：" + this.form.fileName + this.form.fileSuffix);
+                        //this.downloadFileByContent(res, this.form.fileName + this.form.fileSuffix);
+                        this.wmcWrite(this.getFormFilePath(), res).then(res => {
+                            console.log('合并结果', res);
+                            if(res) {
+                                this.$message.success("合并成功，文件：" + this.getFormFilePath());
+                                return true;
+                            }
+
+                            this.$message.error("合并失败，文件：" + this.getFormFilePath() + ', 请检查文件路径是否存在或者是否有写入权限');
+                        })
                     });
 
                     console.log('content')
                 });
+            },
+
+            getFormFilePath() {
+                return this.form.filePath + '/' + this.form.fileName + this.form.fileSuffix;
             },
 
             test(flag) {
@@ -768,16 +1047,66 @@
 
             batchReplace() {
                 this.nodeList.map((node, idx) => {
-                    this.doReplace(idx);
+                    if(node.fileList.length == 0) {
+                        return false;
+                    }
+
+                    this.doReplace(idx, true);
                 });
             },
 
             batchDownload() {
                 this.nodeList.map((node, idx) => {
+                    if(node.fileList.length == 0) {
+                        return false;
+                    }
+
                     this.downloadFile(idx);
                 });
             },
 
+            clearBoxFileList() {
+                if(this.form.delivery) {
+                    for(let idx in this.nodeList) {
+                        this.clearSearchReplace(idx);
+                    }
+                } else {
+                    let deletedList = this.specialBoxFileList.slice(0);
+                    deletedList.map((file, key) => {
+                        this.closeUploadedFile(this.specialBoxKey, file, false);
+                    })
+                }
+            },
+
+            clearSearchReplace(idx) {
+
+                //debugger
+                if(this.nodeList[idx].fileList.length == 0) {
+                    return false;
+                }
+
+                let deletedList = this.nodeList[idx].fileList.slice(0);
+                console.log(deletedList)
+                deletedList.map((file, key) => {
+                    //debugger
+                    console.warn(file.name, key)
+                    this.closeUploadedFile(idx, file)
+                })
+
+                /*let node = this.initNode();
+                for(let key in node) {
+                    this.nodeList[idx][key] = node[key];
+                }*/
+            },
+
+            closeUploadedFile(idx, file, isMulti = true) {
+                let ref = this.$refs[this.createUploadKey(idx)];
+                if(isMulti) {
+                    ref = ref[0]
+                }
+
+                ref.handleRemove(file, file.raw);
+            },
             getReplaceHis(idx) {
                 if(this.nodeList[idx].replaceHis.length == 0) {
                     this.$message.info('没有替换历史');
@@ -794,10 +1123,13 @@
                 });
             },
 
-            doReplace(idx) {
+            doReplace(idx, isBatch = false) {
 
                 if(this.nodeList[idx].fileList.length == 0) {
-                    this.$message.info("请先上传文件！");
+                    if(!isBatch) {
+                        this.$message.info("请先上传文件！");
+                    }
+
                     return false;
                 }
 
@@ -808,14 +1140,17 @@
                 let promiseList = [];
                 node.fileList.map(file => {
                     let p = this.readFile(file, res => {
-                        res = res.replaceAll(node.search, node.replace);
+                        res = res.replace(new RegExp(node.search, 'g'), node.replace);
+                        //debugger
                         file.raw = new File([res], file.name, {
                             name: file.name,
                             size: res.length,
                             type: file.type,
+                            uid: file.uid,
                             lastModified: file.lastModified,
                         });
 
+                        file.raw.uid = file.uid;
                         this.$message({
                             message: file.name + ' 替换成功',
                             type: 'success'
@@ -871,8 +1206,12 @@
                     return false;
                 }
 
+                if(!this.form.filePath) {
+                    this.$message.info("程式保存路径未配置，请到程式串联页面配置");
+                    return false;
+                }
+
                 this.nodeList[idx].fileList.map(file => {
-                    let url = URL.createObjectURL(file.raw);
                     let name = file.name.substring(0, file.name.lastIndexOf("."));
                     let suffix = file.name.substring(file.name.lastIndexOf("."));
                     if(this.nodeList[idx].replaceHis.length > 0) {
@@ -880,7 +1219,12 @@
                     }
 
                     console.warn(file.name)
-                    this.downloadBlob(url, name + suffix);
+                    //this.downloadBlob(url, name + suffix);
+                    this.readFile(file, res => {
+                        let path = this.form.filePath + "/" + name + suffix;
+                        this.wmcWrite(path, res);
+                        this.$message.success("程式保存成功，程式名： " + path)
+                    })
                 });
             },
             initNodeList() {
@@ -906,7 +1250,7 @@
 
             handleRemove(idx) {
                 return (file, fileList) => {
-                    console.log(file, fileList)
+                    console.log(idx, file, fileList)
                     /*for(var key in fileList) {
                         if(file.name == fileList[key].name) {
                             return false;
@@ -1016,12 +1360,20 @@
     };
 </script>
 <style>
+    #tab-first {
+        border: none !important;;
+        outline:none !important;
+    }
     .wrap {
         border: 1px solid #ebebeb;
         border-radius: 3px;
         transition: .2s;
-        padding: 10px;
         margin-top: 20px;
+        padding: 20px !important;
+    }
+
+    .wrap div {
+        outline:none !important;
     }
 
     .content-overflow {
@@ -1089,6 +1441,34 @@
         display: block;
     }
 
+    .sr-upload-demo {
+        position: relative;
+        height: 100%;
+        width: 100%;
+    }
+
+    .sr-upload-demo .el-upload {
+        position: absolute;
+        z-index: 99;
+        border: 0px !important;
+        background: none;
+        width: 100%;
+    }
+
+    .sr-upload-demo .el-upload .el-upload-dragger {
+
+        border: 0px !important;
+        background: none;
+        width: 100%;
+        height: 100%;
+    }
+
+    .sr-upload-demo .el-icon-close {
+        position: absolute;
+        z-index: 999;
+        display: block;
+    }
+
     .upload-demo {
         position: relative;
     }
@@ -1121,7 +1501,7 @@
     }
 
     .margin-left-3 {
-        margin-left: 3px;
+        margin-left: 3px !important;
     }
 
     .margin-left-10 {
@@ -1298,7 +1678,21 @@
         position: absolute;
         top: 0px;
         z-index: 999;
-        background: #eff1f5;
+        background: white;
     }
+
+    .third-box .folder-content {
+        border-radius: 5px;
+        border: 1px solid #8080805e;
+        height: 450px;
+        overflow: scroll;
+        margin-top: 10px;
+    }
+
+    .third-box .folder-select-title {
+        font-weight: bold;
+    }
+
+
 
 </style>

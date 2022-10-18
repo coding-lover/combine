@@ -4,16 +4,21 @@
     "beforeBuildCommand": "npm run build:prod",
     "beforeDevCommand": "npm run dev",
     "devPath": "http://localhost:8083",
-    "distDir": "../dist"
+    "distDir": "../dist",
+    "withGlobalTauri": true
   },
   "package": {
-    "productName": "lt-file-combine",
+    "productName": "隆特程式串联",
     "version": "1.1.0"
   },
   "tauri": {
     "allowlist": {
+      "all": true,
       "shell": {
         "open": true
+      },
+      "fs": {
+        "scope": ["*"]
       }
     },
     "bundle": {
@@ -61,17 +66,17 @@
     "windows": [
       {
         "fullscreen": false,
-        "height": 600,
+        "height": 800,
         "resizable": true,
         "center": true,
-        "title": "隆特多文件合并",
-        "width": 800,
+        "title": "隆特串联程式",
+        "width": 1250,
         "label": "home",
         "visible": false
       },
       {
-        "width": 800,
-        "height": 600,
+        "width": 1250,
+        "height": 800,
         "decorations": false,
         "center": true,
         "visible": true,
