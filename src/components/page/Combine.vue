@@ -593,6 +593,10 @@
         mounted() {
             this.initNodeList();
             this.initParams();
+
+            if(navigator.userAgent.toLowerCase().indexOf('windows') != -1) {
+                this.folderData.dirs = ['D:/', 'E:/', 'F:/'];
+            }
         },
 
         methods: {
