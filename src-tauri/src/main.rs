@@ -42,14 +42,16 @@ fn main() {
 
 #[tauri::command]
 async fn my_read_file(path: std::path::PathBuf) -> String {
+    let real_path = fix_path(path);
     // 读取文件内容，以文本字符串形式返回
-    println!("{:?}", path);
-    std::fs::read_to_string(path).unwrap()
+    println!("{:?}", real_path);
+    std::fs::read_to_string(real_path).unwrap()
 }
 
 #[tauri::command]
 async fn my_read_file_dir(path: std::path::PathBuf)  {
-    let  entries = std::fs::read_dir(path)
+    let real_path = fix_path(path);
+    let  entries = std::fs::read_dir(real_path)
             //.map(|res| res.map(|e| e.path()))
             .unwrap();
 
@@ -63,7 +65,8 @@ async fn my_read_file_dir(path: std::path::PathBuf)  {
 
 #[tauri::command]
 fn wmc_write(path: std::path::PathBuf, content: String) -> bool {
-    match fs::write(path, content) {
+    let real_path = fix_path(path);
+    match fs::write(real_path, content) {
         Ok(entry) => true,
         Err(e) => false
     }
@@ -82,13 +85,14 @@ fn wmc_read(path: std::path::PathBuf) -> String {
         Err(e) => String::from("")
     }*/
 
-    println!("path = {:?}", path);
+    let real_path = fix_path(path);
+    println!("path = {:?}", real_path);
 
-    if(!path.exists()) {
+    if(!real_path.exists()) {
         return String::from("");
     }
 
-    match fs::read_to_string(path) {
+    match fs::read_to_string(real_path) {
         Ok(entry) => entry,
         Err(error) => String::from("")
     }
@@ -96,7 +100,8 @@ fn wmc_read(path: std::path::PathBuf) -> String {
 
 #[tauri::command]
 fn wmc_write_new(path: std::path::PathBuf, content: String) -> std::io::Result<()> {
-    std::fs::write(path, content)?;
+    let real_path = fix_path(path);
+    std::fs::write(real_path, content)?;
     Ok(())
 }
 
@@ -104,8 +109,9 @@ fn wmc_write_new(path: std::path::PathBuf, content: String) -> std::io::Result<(
 
 #[tauri::command]
 fn wmc_read_dir(path: std::path::PathBuf) -> String{
-    println!("path = {:?}", path);
-    let entries = match test(path) {
+    let real_path = fix_path(path);
+    println!("path = {:?}", real_path);
+    let entries = match test(real_path) {
         Ok(entry) => entry,
         //Err(e) => panic!("Problem creating the file: {:?}", e)
         Err(e) => Vec::new()
@@ -131,4 +137,14 @@ fn test(path: std::path::PathBuf) -> Result<Vec<String>, std::io::Error> {
     // The entries have now been sorted by their path.
     //println!("{:?}", entries);
     Ok(entries)
+}
+
+fn fix_path(path: std::path::PathBuf) -> std::path::PathBuf {
+    let pathSrt = path.as_path().display().to_string();
+    if(pathSrt.contains(":/") && pathSrt.starts_with("/")) {
+        let str: String = pathSrt.trim_start_matches('/').to_string();
+        return std::path::PathBuf::from(str);
+    }
+
+    return path;
 }
