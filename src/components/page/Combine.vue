@@ -728,6 +728,19 @@
                 }
             },
             initParams() {
+                let formCache = localStorage.getItem('form');
+                formCache = JSON.parse(formCache);
+                if(!formCache) {
+                    return "";
+                }
+
+                if(formCache != null) {
+                    for(let key in formCache) {
+                        this.form[key] = formCache[key];
+                    }
+                }
+
+                return false;
                 this.cacheRead().then(res => {
                     if(!res) {
                         return "";
@@ -748,8 +761,8 @@
                 this.selectTemplate(this.form.selectedTemplate);
             },
             updateLocalStorage() {
-                //localStorage.setItem('form', JSON.stringify(this.form));
-                this.cacheWrite(this.form)
+                localStorage.setItem('form', JSON.stringify(this.form));
+                //this.cacheWrite(this.form)
             },
             selectTemplate(idx) {
                 this.form.templateList = this.form.templateList.filter(t => t); // remove null
@@ -1378,6 +1391,17 @@
 
     .wrap div {
         outline:none !important;
+        -webkit-tap-highlight-color:rgba(0,0,0,0);
+    }
+
+    .wrap *:focus {
+        outline:none !important;
+        -webkit-tap-highlight-color:rgba(0,0,0,0);
+    }
+
+    *:focus {
+        outline: none;
+        -webkit-tap-highlight-color:rgba(0,0,0,0);
     }
 
     .content-overflow {
