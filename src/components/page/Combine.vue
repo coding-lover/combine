@@ -378,6 +378,7 @@
             return {
                 activeName: 'first',
                 cacheFile: 'web.conf.json',
+                isWinOs: false,
                 folderData: {
                     // root
                     sourceDir: '/',
@@ -594,8 +595,10 @@
             this.initNodeList();
             this.initParams();
 
+
             if(navigator.userAgent.toLowerCase().indexOf('windows') != -1) {
-                this.folderData.dirs = ['D:/', 'E:/', 'F:/'];
+                this.isWinOs = true;
+                this.folderData.dirs = ['C:/', 'D:/', 'E:/', 'F:/'];
             }
         },
 
@@ -661,6 +664,12 @@
 
             folderChange(value) {
                 console.warn(value)
+                if(this.isWinOs) {
+                    value = value.map(res => {
+                        return res.slice(1);
+                    });
+                }
+
                 this.selectedFolder = value;
             },
 
