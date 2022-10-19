@@ -71,8 +71,6 @@ fn wmc_write(path: std::path::PathBuf, content: String) -> bool {
         Err(e) => false
     }
 
-
-
     /*std::fs::write(path, content)?
 
     Ok(())*/
@@ -111,6 +109,16 @@ fn wmc_write_new(path: std::path::PathBuf, content: String) -> std::io::Result<(
 fn wmc_read_dir(path: std::path::PathBuf) -> String{
     let real_path = fix_path(path);
     println!("path = {:?}", real_path);
+
+    //debug
+    /*if(real_path.as_path().display().to_string().contains("Users")) {
+        let res = ["C:/Users/aa,true", "C:/Users/bb,true", "C:/Users/cc,true"];
+        return serde_json::to_string(&res).unwrap();
+    }
+
+    let res = ["C:/Users,true"];
+    return serde_json::to_string(&res).unwrap();*/
+
     let entries = match test(real_path) {
         Ok(entry) => entry,
         //Err(e) => panic!("Problem creating the file: {:?}", e)
@@ -148,3 +156,4 @@ fn fix_path(path: std::path::PathBuf) -> std::path::PathBuf {
 
     return path;
 }
+

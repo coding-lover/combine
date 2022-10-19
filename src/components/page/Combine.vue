@@ -595,7 +595,6 @@
             this.initNodeList();
             this.initParams();
 
-
             if(navigator.userAgent.toLowerCase().indexOf('windows') != -1) {
                 this.isWinOs = true;
                 this.folderData.dirs = ['C:/', 'D:/', 'E:/', 'F:/'];
@@ -686,13 +685,24 @@
                     content = content.map(item => {
                         let parsed = item.split(',');
                         return {
-                            path: parsed[0],
+                            path: this.fixWinsDir(parsed[0]),
                             is_dir: parsed[1] == 'true' ? true : false,
                         };
                     });
 
                     return content;
                 });
+            },
+
+            fixWinsDir(dir) {
+                if(!this.isWinOs) {
+                    return dir;
+                }
+
+                dir = dir.replace(new RegExp("//", "g"), '/');
+                dir = dir.replace(new RegExp("\\\\", "g"), '/');
+
+                return dir;
             },
 
             wmcWrite(path, content) {
