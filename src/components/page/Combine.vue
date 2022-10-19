@@ -369,7 +369,7 @@
     import ElTableDraggable from 'element-ui-el-table-draggable';
     const iconv = require('iconv-lite');
     const jschardet = require("jschardet")
-    import { invoke } from '@tauri-apps/api';
+    import { invoke, window } from '@tauri-apps/api';
 
 
 
@@ -870,9 +870,12 @@
                         }*/
 
                         let p = this.readFile(file, res => {
+                            //debugger
+                            console.warn('***********res***********')
+                            console.warn(res)
                             res = res.split("\n").filter(res => res);
-                            res.splice(0, file.headerDeleteLine);
-                            res.splice(res.length - file.footerDeleteLine, file.footerDeleteLine);
+                            res.splice(0, this.form.fileHeaderDeletedLine);
+                            res.splice(res.length - this.form.fileFooterDeletedLine, this.form.fileFooterDeletedLine);
                             return res.join("\n");
                         });
 

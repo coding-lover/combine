@@ -72,7 +72,8 @@
         "title": "隆特串联程式",
         "width": 1250,
         "label": "home",
-        "visible": false
+        "visible": false,
+        "fileDropEnabled": false
       },
       {
         "width": 1250,
