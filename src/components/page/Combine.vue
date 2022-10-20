@@ -890,9 +890,10 @@
                     this.form.ready = false;
                     Promise.all([...promiseList]).then(res => {
                         console.log(res)
-                        res.unshift(this.form.fileHeader);
-                        res.push(this.form.fileFooter);
+                        res.unshift(this.fixTextArea(this.form.fileHeader));
+                        res.push(this.fixTextArea(this.form.fileFooter));
                         res = res.filter(res => res);
+                        console.log("raw res: ", res)
                         res = res.join("\n");
 
                         console.log(res)
@@ -912,6 +913,14 @@
 
                     console.log('content')
                 });
+            },
+
+            fixTextArea(content) {
+                if(!this.isWinOs) {
+                    return content;
+                }
+
+                return content.replace(new RegExp("\n", "g"), "\r\n");
             },
 
             combineFile_bak() {
