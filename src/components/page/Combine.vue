@@ -224,7 +224,7 @@
                             </div>
                             <div class="box-operator clearfix">
                                 <el-col :span="12">
-                                    <el-badge :value="specialBoxNum" class="large-btn" :hidden="specialBoxNum > 0 ? false : true" >
+                                    <el-badge :value="getCombineFileNum" class="large-btn" :hidden="getCombineFileNum > 0 ? false : true" >
                                         <el-button type="primary" v-show="form.ready" size="medium" class="large-btn" @click="combineFile">合并</el-button>
                                         <el-button v-show="!form.ready" type="primary"  size="medium" class="large-btn" :loading="true">合并中</el-button>
                                     </el-badge>
@@ -377,6 +377,7 @@
         data() {
             return {
                 activeName: 'first',
+                winTop: '',
                 cacheFile: 'web.conf.json',
                 isWinOs: false,
                 folderData: {
@@ -510,6 +511,13 @@
             ElTableDraggable
         },
         computed: {
+            getCombineFileNum: function() {
+                if(this.form.delivery) {
+                    return this.totalNum;
+                }
+
+                return this.specialBoxNum;
+            },
             getCurFolder: function() {
                 return this.selectedFolder.join(',');
             },
@@ -594,6 +602,7 @@
         mounted() {
             this.initNodeList();
             this.initParams();
+            this.handleWindowTop();
 
             if(navigator.userAgent.toLowerCase().indexOf('windows') != -1) {
                 this.isWinOs = true;
@@ -602,6 +611,16 @@
         },
 
         methods: {
+             handleWindowTop() {
+                let curWin = window.getCurrent();
+                if (this.winTop === '窗口置顶') {
+                    curWin.setAlwaysOnTop(true);
+                    this.winTop = '取消置顶';
+                } else {
+                    curWin.setAlwaysOnTop(false);
+                    this.winTop = '窗口置顶';
+                }
+            },
             deleteNodeListFile(nodeIdx, fileId) {
                 let fileList = this.nodeList[nodeIdx].fileList.slice(0);
                 fileList.map(file => {
