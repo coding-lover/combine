@@ -28,6 +28,7 @@
     
 - [安装 node 环境](https://blog.csdn.net/m0_67393413/article/details/125345980)
 - [安装代码编辑器vsCode](http://vscode.bianjiqi.net/)
+- [安装代码版本管理工具githubDesk](https://desktop.github.com/)
 
 ## 目录说明
 ```$xslt
@@ -73,6 +74,73 @@
     ![](./public/tauri-build.png)
 - 仅运行 vue 项目 ``npm run dev`` 双击 local 后面的连接
   ![编译成功](./public/vue-dev.jpeg)
+  
+## 最佳实践 页面 Test.vue
+1. 创建页面文件，在 `src/components/page/` 下面创建文件 Test.vue
+2. 编写代码，在 Test.vue 文件添加
+```vue
+<template>
+    <div>
+        这是一个测试
+    </div>
+</template>
+
+<script>
+export default {
+    data() {
+        return {
+
+        };
+    },
+    methods: {
+
+    }
+};
+</script>
+```
+3. 添加路由，在`src/router/index.js` 文件添加`Test`页面的访问路由
+```vue
+import Vue from 'vue';
+import Router from 'vue-router';
+
+Vue.use(Router);
+
+export default new Router({
+    routes: [
+        {
+            path: '/',
+            component: () => import(/* webpackChunkName: "dashboard" */ '../components/page/Combine.vue'),
+            meta: { title: '合并' }
+        },
+        {
+            path: '/test',  //访问路由， 可以自己定义
+            component: () => import('../components/page/Test.vue'), //这里是Test.vue 的文件路径，一定要写对
+            meta: { title: '测试' } //页面标题，可以自定义
+        },
+        {
+            path: '*',
+            redirect: '/404'
+        }
+    ]
+});
+```
+
+要添加的代码为
+
+```vue
+{
+    path: '/test',  
+    component: () => import('../components/page/Test.vue'), 
+    meta: { title: '测试' } 
+}
+```
+4. 开发模式运行 vue 项目 `npm run dev`
+5. 访问 `Test` 页面 [http://localhost:8083/test](http://localhost:8083/test)
+6. 访问成功
+![成功页面](./public/test-page.png)
+7. 如果能看到6的页面，恭喜你已经实现了vue的都小页面了；如果你想在这个页面加入更丰富的功能，请参考 [element-ui](https://element.eleme.cn/#/zh-CN/component/layout), 里面有丰富组件；
+你想要哪个组件，只需要把它的实例代码复制过来，基本可以使用了！
+8. 此时这个应用还是web版本的，如果想把它打包成桌面安装包呢？只需要执行打包命令 `npm run tauri build` ； 由于 `/test` 页面不是项目的默认页面，所以要在`tauri`配置菜单或者在默认页面添加跳转连接来跳转到这个页面
 
 ## 相关文档
 ### 前端

@@ -11,6 +11,12 @@ export default new Router({
             meta: { title: '合并' }
         },
         {
+            path: '/test',
+            component: () => import(/* webpackChunkName: "dashboard" */ '../components/page/Test.vue'),
+            meta: { title: '合并' }
+        },
+
+        {
             path: '*',
             redirect: '/404'
         }
