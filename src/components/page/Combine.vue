@@ -299,7 +299,6 @@
 
                             <el-form-item label="文件保存路径" prop="filePath">
                                 <el-input placeholder="文件保存路径" v-model="form.filePath" class="input-with-select" readonly>
-                                    <el-button slot="append" icon="el-icon-folder" type="success" @click="openFolder"></el-button>
                                 </el-input>
                             </el-form-item>
 
@@ -316,25 +315,31 @@
                         <el-form >
                             <div v-for="(item,key) in getTemplate">
                                 <el-form-item label="" prop="fileName">
-                                    <el-col :span="10">
-                                        <el-radio v-model="form.selectedTemplate" :label="key" border class="s-radio">
-                                            <el-input   placeholder="模板名称" v-model="item.name" class="s-input"></el-input>
+                                    <el-col :span="23">
+                                        <el-radio v-model="form.selectedTemplate" :label="key" border class="s-radio clearfix">
+                                            <el-col :span="13" :offset="1">
+                                                <el-input placeholder="文件尾增加内容" v-model="item.value" type="textarea" :autosize="{ minRows: 6}">
+
+                                                </el-input>
+                                            </el-col>
+
+                                            <el-col :span="10" >
+                                                <el-input   placeholder="模板名称" v-model="item.name" class="s-input"></el-input>
+
+                                                <div>
+                                                    <el-input placeholder="文件保存路径" v-model="item.path" class="input-with-select mt-10" readonly >
+                                                        <el-button slot="append" icon="el-icon-folder" type="success" @click="openFolder(key)"></el-button>
+                                                    </el-input>
+                                                </div>
+                                            </el-col>
                                         </el-radio>
-
                                     </el-col>
 
-                                    <el-col :span="13">
-                                        <el-input placeholder="文件尾增加内容" v-model="item.value" type="textarea" :autosize="{ minRows: 6}">
-
-                                        </el-input>
-
-                                    </el-col>
                                     <el-col :span="1"  title="删除" >
                                         <i class="el-icon-close t-close" @click="deleteTemplate(key)"></i>
                                     </el-col>
 
                                 </el-form-item>
-                                <el-divider class="clearfix"></el-divider>
                             </div>
 
                         </el-form>
@@ -425,6 +430,8 @@
                     }
                 },
 
+                operatorTemplateIdx: 0,
+
                 dialogFolderSelectVisible: false,
                 dialogFormVisible: false,
                 selectedFolder: [],
@@ -501,7 +508,7 @@
                         { required: true, message: '请选择文件后缀', trigger: 'change' }
                     ],
                     filePath: [
-                        { required: true, message: '请选择文件路径', trigger: 'blur' }
+                        { required: true, message: '请在模板里面设置文件路径', trigger: 'blur' }
                     ],
 
                 }
@@ -631,11 +638,12 @@
             },
             dialogSaveFolder() {
                 this.dialogFolderSelectVisible = false;
-                this.form.filePath = this.selectedFolder.join(',');
+                this.form.templateList[this.operatorTemplateIdx]['path'] = this.selectedFolder.join(',');
                 this.updateLocalStorage();
             },
-            openFolder() {
+            openFolder(idx) {
                 this.dialogFolderSelectVisible = true;
+                this.operatorTemplateIdx = idx;
             },
             basename(str) {
                 var idx = str.lastIndexOf('/')
@@ -794,9 +802,9 @@
                 });
             },
             dialogSaveTemplate() {
-                this.updateLocalStorage();
                 this.dialogFormVisible = false;
                 this.selectTemplate(this.form.selectedTemplate);
+                this.updateLocalStorage();
             },
             updateLocalStorage() {
                 localStorage.setItem('form', JSON.stringify(this.form));
@@ -811,10 +819,11 @@
                 let cur = this.form.templateList[idx];
                 this.form.fileFooter = cur.value;
                 this.form.templateName = cur.name;
+                this.form.filePath = cur.path;
             },
 
             addTemplate() {
-                let template = {name: '', value: ''};
+                let template = {name: '', value: '', path: ''};
                 this.form.templateList.push(template);
             },
 
@@ -1733,17 +1742,29 @@
     }
 
     .third-box .s-input {
-        width: 90%;
+        width: 100%;
     }
 
     .third-box .s-radio {
         width: 100%;
-        height: 50px;
+        height: 170px;
     }
+
+    .third-box .s-radio .el-radio__label:before, .third-box .s-radio .el-radio__label:after {
+        display: table;
+        content: "";
+    }
+
+    .third-box .s-radio .el-radio__label:after {
+        clear: both;
+    }
+
+
 
     .third-box .t-close {
         font-size: 20px;
         margin-top: -10px;
+        cursor: pointer;
     }
     .third-box .t-close i{
         display: inline-block;
