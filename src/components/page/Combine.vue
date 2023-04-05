@@ -1230,7 +1230,7 @@
                     let name = file.name.substring(0, file.name.lastIndexOf("."));
                     let suffix = file.name.substring(file.name.lastIndexOf("."));
                     if(this.nodeList[idx].replaceHis.length > 0) {
-                        name += "(" + this.nodeList[idx].replaceHis.join(",") + ")";
+                        //name += "(" + this.nodeList[idx].replaceHis.join(",") + ")";
                     }
 
                     console.warn(file.name)
