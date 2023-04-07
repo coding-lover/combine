@@ -259,7 +259,7 @@
                         </div>
                         <div  class="text item">
                             <el-card class="box-card mt-10" v-for="(his, key) in getCombineHisList" shadow="hover">
-                                <div slot="header" class="clearfix">
+                                <div slot="header" class="clearfix cb-his-card-header">
                                     <span>[{{his.create_at}}]</span>
                                     <span style="margin-left:10px;">{{his.name}}</span>
                                     <el-button style="float: right; padding: 3px 0; color:red;cursor: pointer;" type="text" @click="delHis(key)">删除</el-button>
@@ -290,6 +290,9 @@
                 cacheFile: 'web.conf.json',
                 isWinOs: false,
                 combineHis: [
+                    // {name: 'test', create_at: '2023-01-01 22:22:22', children: ['a.txt', 'b.txt']},
+                    // {name: 'test', create_at: '2023-01-01 22:22:22', children: ['a.txt', 'b.txt']},
+                    // {name: 'test', create_at: '2023-01-01 22:22:22', children: ['a.txt', 'b.txt']}
                 ],
                 folderData: {
                     // root
@@ -467,7 +470,9 @@
             },
 
             getCombineHisList: function() {
-                return this.combineHis.reverse();
+                return this.combineHis.sort(function(x, y) {
+                    return y.create_at.localeCompare(x.create_at);
+                });
             },
 
             getFileList: {
@@ -1753,7 +1758,11 @@
     }
 
     .wrap-card .el-card__header{
-        padding: 5px 5px;
+        padding: 10px 10px;
+    }
+
+    .cb-his-card-header {
+        font-weight: bold;
     }
 
 
