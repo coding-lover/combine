@@ -6,6 +6,8 @@ use tauri::Manager;
 use std::io;
 use std::fs::{self, DirEntry};
 use std::path::Path;
+use encoding_rs::{Encoding, GBK};
+
 
 struct wmc_path {
     path: String,
@@ -66,7 +68,9 @@ async fn my_read_file_dir(path: std::path::PathBuf)  {
 #[tauri::command]
 fn wmc_write(path: std::path::PathBuf, content: String) -> bool {
     let real_path = fix_path(path);
-    match fs::write(real_path, content) {
+    let (gbk_bytes, _, _) = GBK.encode(&content);
+
+    match fs::write(real_path, gbk_bytes) {
         Ok(entry) => true,
         Err(e) => false
     }

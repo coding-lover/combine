@@ -67,123 +67,6 @@
                 </el-tab-pane>
 
 
-                <!--<el-tab-pane label="文件合并" name="second" v-show="false">
-                    <el-col :span="10">
-                        <el-form ref="form" :rules="formRules" :model="form" label-width="90px">
-                            <el-form-item label="使用替换">
-                                <el-switch v-model="form.delivery">
-                                </el-switch>
-                                <span style="color: #F56C6C;margin-left: 5px;display: inline-block;">使用已经替换的文件或者重新上传文件</span>
-                            </el-form-item>
-                            <el-form-item label="上传" v-show="!form.delivery">
-                                <span slot="label">上传<el-badge :value="specialNum" :hidden="specialNum > 0 ? false : true" ></el-badge></span>
-                                <el-upload
-                                        class=""
-                                        drag
-                                        action=""
-                                        :ref="createUploadKey(specialKey)"
-                                        :on-change="myHandleChange(specialKey)"
-                                        :on-remove="handleRemove(specialKey)"
-                                        :auto-upload="false"
-                                        multiple>
-                                    <i class="el-icon-upload"></i>
-                                    <div class="el-upload__text">
-
-                                        <p>将文件拖到此处，或<em>点击上传</em></p>
-                                    </div>
-                                </el-upload>
-                            </el-form-item>
-
-                            <el-form-item label="文件头" prop="fileHeader">
-                                <el-input type="textarea" v-model="form.fileHeader"></el-input>
-                            </el-form-item>
-
-
-                            <el-form-item label="文件尾" prop="fileFooter">
-                                <el-input type="textarea" v-model="form.fileFooter"></el-input>
-                            </el-form-item>
-
-                            <el-form-item label="文件名" prop="fileName">
-                                <el-input placeholder="请输入内容" v-model="form.fileName" class="input-with-select">
-                                    <el-select v-model="form.fileSuffix" slot="append" placeholder="请选择" prop="fileSuffix">
-                                        <el-option
-                                                v-for="item in form.fileSuffixOptions"
-                                                :key="item.value"
-                                                :label="item.name"
-                                                :value="item.value">
-                                        </el-option>
-                                    </el-select>
-                                </el-input>
-
-                            </el-form-item>
-
-                            <el-form-item>
-                                <el-button v-show="form.ready" type="primary" @click="combineFile">立即合并</el-button>
-                                <el-button v-show="!form.ready" type="primary" :loading="true">合并中</el-button>
-                                <el-button @click="formReset()">取消</el-button>
-                            </el-form-item>
-                        </el-form>
-                    </el-col>
-                    <el-col :span="14">
-
-                        <div class="drag-box">
-                            <div class="drag-box-item">
-                                <el-empty v-show="getFileList.length == 0" description="未上传文件"></el-empty>
-                                <el-table-draggable handle=".allowDrag" @drop="dragChange">
-                                    <el-table
-                                            ref="dragTable"
-                                            :data="getFileList"
-                                            style="width: 100%" v-show="getFileList.length > 0">
-                                        <el-table-column
-                                                prop="id"
-                                                label="拖拽"
-                                                width="50">
-                                            <template slot-scope="{row}">
-                                                <i class="el-icon-rank allowDrag" style="cursor:pointer" /> {{row.id}}
-                                            </template>
-                                        </el-table-column>
-                                        <el-table-column
-                                                prop="name"
-                                                label="文件名"
-                                                width="230" >
-                                            <template slot-scope="scope">
-                                                <span class="overflow-text">{{scope.row.name}}</span>
-                                            </template>
-                                        </el-table-column>
-                                        <el-table-column
-                                                prop="option"
-                                                label="操作">
-                                            <template slot="header" slot-scope="scope">
-                                                <el-select class="" v-model="dragConfig.optionVal" placeholder="请选择" size="mini">
-                                                    <el-option
-                                                            v-for="item in dragConfig.options"
-                                                            :key="item.value"
-                                                            :label="item.label"
-                                                            :value="item.value">
-                                                    </el-option>
-                                                </el-select>
-
-                                                <el-input-number class=" ml-3" size="mini" v-model="dragConfig.setVal" controls-position="right"  :min="0" :max="10" placeholder="值"></el-input-number>
-
-                                                <el-button type="primary" size="mini" class="ml-3" @click="fileConfigAdd">加</el-button>
-                                                <el-button type="primary" size="mini" @click="fileConfigReduce">减</el-button>
-                                            </template>
-                                            <template slot-scope="scope">
-                                                <el-input-number :controls="false" :ref="createDeleteKey(scope.row.id, 'headerDeleteLine')" size="mini" v-model="scope.row.headerDeleteLine" controls-position="right"  :min="0"  placeholder="文件头删除行数"></el-input-number>
-                                                <el-input-number :controls="false" :ref="createDeleteKey(scope.row.id, 'footerDeleteLine')" class="ml-3" size="mini" v-model="scope.row.footerDeleteLine" controls-position="right" :min="0" placeholder="文件尾删除行数"></el-input-number>
-                                            </template>
-
-                                        </el-table-column>
-
-                                    </el-table>
-                                </el-table-draggable>
-                            </div>
-                        </div>
-
-                    </el-col>
-
-                </el-tab-pane>-->
-
                 <el-tab-pane label="程式串联" name="third" style="margin-top: 10px;" class="third-box">
                     <el-col :span="10">
                         <el-card class="box-card" shadow="never" >
@@ -376,8 +259,6 @@
     const jschardet = require("jschardet")
     import { invoke, window } from '@tauri-apps/api';
 
-
-
     export default {
         data() {
             return {
@@ -522,7 +403,6 @@
                 if(this.form.delivery) {
                     return this.totalNum;
                 }
-
                 return this.specialBoxNum;
             },
             getCurFolder: function() {
