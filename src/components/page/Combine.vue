@@ -249,6 +249,29 @@
                     </el-dialog>
 
                 </el-tab-pane>
+
+                <el-tab-pane label="串联历史" name="history" style="margin-top: 10px;" class="history-box">
+                    <span slot="label">串联历史<el-badge :value="combineHisNum" class="large-btn" :hidden="combineHisNum > 0 ? false : true" ></el-badge></span>
+                    <el-empty v-if="combineHisNum == 0" description="没有历史记录"></el-empty>
+                    <el-card v-if="combineHisNum > 0" class="box-card wrap-card" >
+                        <div slot="header" class="clearfix">
+                            <el-button style="float: right;cursor: pointer;" type="danger" @click="delAllHis()">全部删除</el-button>
+                        </div>
+                        <div  class="text item">
+                            <el-card class="box-card mt-10" v-for="(his, key) in getCombineHisList" shadow="hover">
+                                <div slot="header" class="clearfix cb-his-card-header">
+                                    <span>[{{his.create_at}}]</span>
+                                    <span style="margin-left:10px;">{{his.name}}</span>
+                                    <el-button style="float: right; padding: 3px 0; color:red;cursor: pointer;" type="text" @click="delHis(key)">删除</el-button>
+                                </div>
+                                <div v-for="child in his.children" class="text item">
+                                    {{child}}
+                                </div>
+                            </el-card>
+                        </div>
+                    </el-card>
+                    
+                </el-tab-pane>
             </el-tabs>
         </el-col>
     </el-row>
@@ -266,6 +289,11 @@
                 winTop: '',
                 cacheFile: 'web.conf.json',
                 isWinOs: false,
+                combineHis: [
+                    // {name: 'test', create_at: '2023-01-01 22:22:22', children: ['a.txt', 'b.txt']},
+                    // {name: 'test', create_at: '2023-01-01 22:22:22', children: ['a.txt', 'b.txt']},
+                    // {name: 'test', create_at: '2023-01-01 22:22:22', children: ['a.txt', 'b.txt']}
+                ],
                 folderData: {
                     // root
                     sourceDir: '/',
@@ -427,6 +455,9 @@
 
                 return num;
             },
+            combineHisNum: function() {
+                return this.combineHis.length;
+            },
             specialNum: function() {
                 return this.specialFileList.length;
             },
@@ -436,6 +467,12 @@
 
             getTemplate: function() {
                 return this.form.templateList;
+            },
+
+            getCombineHisList: function() {
+                return this.combineHis.sort(function(x, y) {
+                    return y.create_at.localeCompare(x.create_at);
+                });
             },
 
             getFileList: {
@@ -507,6 +544,14 @@
                     curWin.setAlwaysOnTop(false);
                     this.winTop = '窗口置顶';
                 }
+            },
+            delHis(idx) {
+                //删除功能
+                this.combineHis.splice(idx, 1);
+                console.log(idx,  this.combineHis)
+            },
+            delAllHis() {
+                this.combineHis = [];
             },
             deleteNodeListFile(nodeIdx, fileId) {
                 let fileList = this.nodeList[nodeIdx].fileList.slice(0);
@@ -654,6 +699,11 @@
                 }
             },
             initParams() {
+                //初始化的时候，获取缓存里面的修改历史
+                let combineHisCache = localStorage.getItem('combine-his');
+                combineHisCache = JSON.parse(combineHisCache);
+                this.combineHis = combineHisCache == null ? [] : combineHisCache;
+
                 let formCache = localStorage.getItem('form');
                 formCache = JSON.parse(formCache);
                 if(!formCache) {
@@ -688,6 +738,9 @@
             },
             updateLocalStorage() {
                 localStorage.setItem('form', JSON.stringify(this.form));
+
+                //存储修改历史
+                localStorage.setItem('combine-his', JSON.stringify(this.combineHis));
                 //this.cacheWrite(this.form)
             },
             selectTemplate(idx) {
@@ -767,6 +820,7 @@
                     }
 
                     let promiseList = [];
+                    let combineList = {name: '', create_at: this.getDatetime(), children: []};
                     rawList.map(file => {
                         //debugger
                         /*if(this.form.delivery && rawIds.indexOf(file.id) == -1) {
@@ -776,6 +830,9 @@
                         if(!this.form.delivery && rawIds.indexOf(file.id) != -1) {
                             return false;
                         }*/
+
+                        //合并的源文件列表
+                        combineList.children.push(file.name);
 
                         let p = this.readFile(file, res => {
                             //debugger
@@ -811,7 +868,14 @@
                             console.log('合并结果', res);
                             if(res) {
                                 this.$message.success("合并成功，文件：" + this.getFormFilePath());
+
+                                combineList.name = this.getFormFilePath();
+
+                                //debug 
+                                console.log(combineList)
+                                this.combineHis.push(combineList);
                                 this.updateLocalStorage();
+
                                 return true;
                             }
 
@@ -1171,7 +1235,7 @@
                     let name = file.name.substring(0, file.name.lastIndexOf("."));
                     let suffix = file.name.substring(file.name.lastIndexOf("."));
                     if(this.nodeList[idx].replaceHis.length > 0) {
-                        name += "(" + this.nodeList[idx].replaceHis.join(",") + ")";
+                        //name += "(" + this.nodeList[idx].replaceHis.join(",") + ")";
                     }
 
                     console.warn(file.name)
@@ -1311,6 +1375,27 @@
             createDeleteKey(id, mode) {
                 return id + '-' + mode;
             },
+
+            getDatetime() {
+                let dateObj = new Date();
+                
+                let datetime = dateObj.getFullYear() + '-' 
+                            + this.fixDate(dateObj.getMonth()) + '-' 
+                            + this.fixDate(dateObj.getDate()) + ' ' 
+                            + this.fixDate(dateObj.getHours()) + ':' 
+                            + this.fixDate(dateObj.getMinutes()) + ':' 
+                            + this.fixDate(dateObj.getSeconds());
+
+                return datetime;
+            },
+            fixDate(num)
+            {
+                if(num.toString().length > 1) {
+                    return num;
+                }
+
+                return "0" + num;
+            }
 
         }
     };
@@ -1669,6 +1754,14 @@
     }
 
     .third-box .folder-select-title {
+        font-weight: bold;
+    }
+
+    .wrap-card .el-card__header{
+        padding: 10px 10px;
+    }
+
+    .cb-his-card-header {
         font-weight: bold;
     }
 
