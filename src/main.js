@@ -8,6 +8,16 @@ import 'babel-polyfill';
 import VFolder from 'v-folder';
 Vue.use(VFolder);
 
+import 'prismjs';
+import 'prismjs/components/prism-markup-templating.min';
+import Prism from 'vue-prismjs'
+import 'prismjs/themes/prism-okaidia.css'
+Vue.component("prism", Prism);
+
+import { PrismEditor } from 'vue-prism-editor';
+import 'vue-prism-editor/dist/prismeditor.min.css'; // import the styles
+Vue.component('PrismEditor', PrismEditor);
+
 Vue.config.productionTip = false;
 Vue.use(ElementUI, {
     size: 'small'

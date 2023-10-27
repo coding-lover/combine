@@ -15,6 +15,13 @@ export default new Router({
             component: () => import(/* webpackChunkName: "dashboard" */ '../components/page/Test.vue'),
             meta: { title: '合并' }
         },
+        
+        {
+            path: '/account',
+            component: () => import(/* webpackChunkName: "dashboard" */ '../components/page/AccountsNew.vue'),
+            meta: { title: '合并' }
+        },
+
 
         {
             path: '*',

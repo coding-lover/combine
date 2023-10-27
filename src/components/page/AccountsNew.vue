@@ -76,6 +76,8 @@
                 </div>
             </el-tab-pane>
 
+            <prism-editor class="my-editor height-200" v-model="code" :highlight="highlighter" line-numbers readonly></prism-editor>
+
 
         </el-tabs>
     </div>
@@ -86,11 +88,19 @@
 
 
 <script>
+
+  // import highlighting library (you can use any library you want just return html string)
+  import { highlight, languages } from 'prismjs/components/prism-core';
+  import 'prismjs/components/prism-clike';
+  import 'prismjs/components/prism-javascript';
+  import 'prismjs/themes/prism-tomorrow.css'; // import syntax highlighting styles
+
     import AccountsTestUnit from "../common/AccountsTestUnit";
     export default {
         name: 'accountsNew',
         data () {
             return {
+                code: "console.log('hello world') \n aaaaa \n fff",
                 activeName: 'single',
                 restful: [
                     {
@@ -889,7 +899,10 @@
                             ],
                         },
                     ],
-                    code: ``,
+                    code: `abc de jlk
+                    sdfs
+                    dsf
+                    dfd`,
                 },
             }
         },
@@ -939,7 +952,9 @@
             console.log(process.env.NODE_ENV);
         },
         methods: {
-
+            highlighter(code) {
+                return highlight(code, languages.js); // languages.<insert language> to return html with markup
+            },
         }
     }
 </script>

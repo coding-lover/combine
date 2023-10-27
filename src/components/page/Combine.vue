@@ -40,6 +40,19 @@
                                         multiple>
                                     <i class="el-icon-upload" v-show="item.fileNum == 0"></i>
                                     <div class="el-upload__text" v-show="item.fileNum == 0">将文件拖到此处，或<em>点击上传</em></div>
+                                    
+                                    <div slot="file" slot-scope="{file}">
+                                        <a class="el-upload-list__item-name"><i class="el-icon-document"></i>{{file.name}}</a>
+                                        <label class="el-upload-list__item-status-label">
+                                            <i class="el-icon-upload-success el-icon-circle-check"></i>
+                                        </label>
+                                        <el-tooltip class="item" effect="light"  placement="right">
+                                            <div class="prism-editor-wrap"  slot="content">
+                                                <prism-editor class="my-editor" v-model="code" :highlight="highlighter" line-numbers readonly></prism-editor>
+                                            </div>
+                                            <i class="el-icon-close" style="width: 20px;" @click="closeUploadedFile(idx, file, true)" @mouseover="handleMouseOver(file)"></i>
+                                        </el-tooltip>
+                                    </div>
                                 </el-upload>
                             </div>
 
@@ -87,9 +100,21 @@
                                         multiple>
                                     <i class="el-icon-upload" v-show="specialBoxFileList.length == 0"></i>
                                     <div class="el-upload__text" v-show="specialBoxFileList == 0">将文件拖到此处，或<em>点击上传</em></div>
+                                    <div slot="file" slot-scope="{file}">
+                                        <a class="el-upload-list__item-name"><i class="el-icon-document"></i>{{file.name}}</a>
+                                        <label class="el-upload-list__item-status-label">
+                                            <i class="el-icon-upload-success el-icon-circle-check"></i>
+                                        </label>
+                                        <el-tooltip class="item" effect="light"  placement="right">
+                                            <div class="prism-editor-wrap"  slot="content">
+                                                <prism-editor class="my-editor" v-model="code" :highlight="highlighter" line-numbers readonly></prism-editor>
+                                            </div>
+                                            <i class="el-icon-close" style="width: 20px;" @click="closeUploadedFile(specialBoxKey, file, false)" @mouseover="handleMouseOver(file)"></i>
+                                        </el-tooltip>
+                                    </div>
                                 </el-upload>
 
-                                <ul class="el-upload-list el-upload-list--text" v-show="form.delivery">
+                                <ul class="el-upload-list el-upload-list--text att" v-show="form.delivery">
                                     <el-empty description="请在程式替换页面上传文件" v-show="getFileList.length == 0">
                                         <el-button type="primary" plain @click="activeName='first'">去上传</el-button>
                                     </el-empty>
@@ -99,8 +124,13 @@
                                         <label class="el-upload-list__item-status-label">
                                             <i class="el-icon-upload-success el-icon-circle-check"></i>
                                         </label>
-                                        <i class="el-icon-close" @click="deleteNodeListFile(file.nodeIdx, file.id)"></i>
-                                        <i class="el-icon-close-tip">按 delete 键可删除</i>
+
+                                        <el-tooltip class="item" effect="light"  placement="right">
+                                            <div class="prism-editor-wrap"  slot="content">
+                                                <prism-editor class="my-editor" v-model="code" :highlight="highlighter" line-numbers readonly></prism-editor>
+                                            </div>
+                                            <i class="el-icon-close" style="width: 20px;" @click="deleteNodeListFile(file.nodeIdx, file.id)" @mouseover="handleMouseOver(file)"></i>
+                                        </el-tooltip>
                                     </li>
                                 </ul>
 
@@ -282,9 +312,18 @@
     const jschardet = require("jschardet")
     import { invoke, window } from '@tauri-apps/api';
 
+    // import highlighting library (you can use any library you want just return html string)
+    import { highlight, languages } from 'prismjs/components/prism-core';
+    import 'prismjs/components/prism-clike';
+    import 'prismjs/components/prism-javascript';
+    import 'prismjs/themes/prism-tomorrow.css'; // import syntax highlighting styles
+
     export default {
         data() {
             return {
+                showFlag: true,
+                code: "",
+                plugins: ['line-numbers'],
                 activeName: 'first',
                 winTop: '',
                 cacheFile: 'web.conf.json',
@@ -370,7 +409,7 @@
                     selectedTemplate: 0,
                     templateName: '',
                     ready: true,
-                    delivery: true,
+                    delivery: false,
                 },
                 dragOptions:{
                     animation: 120,
@@ -535,6 +574,15 @@
         },
 
         methods: {
+            handleMouseOver(file) {
+                this.code = file.content;
+            },
+            highlighter(code) {
+                //debugger
+                console.log(':highlight="highlighter"')
+                console.log(code)
+                return highlight(code, languages.js); // languages.<insert language> to return html with markup
+            },
              handleWindowTop() {
                 let curWin = window.getCurrent();
                 if (this.winTop === '窗口置顶') {
@@ -987,6 +1035,7 @@
                     }, time);
                 });
             },
+        
 
             readFile(file, callback) {
                 return new Promise((resolve, reject) => {
@@ -1325,6 +1374,9 @@
                     file.id = this.createId();
                     file.headerDeleteLine = 1;
                     file.footerDeleteLine = 1;
+
+                    //cache file content 
+                    this.readFile(file, res => { file.content = res; });
 
                     //file.
                     if(idx == this.specialKey) {
@@ -1765,6 +1817,31 @@
         font-weight: bold;
     }
 
+    .my-editor {
+  background: #2d2d2d;
+  color: #ccc;
 
+  font-family: Fira code, Fira Mono, Consolas, Menlo, Courier, monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  padding: 5px;
+}
+
+.prism-editor__textarea:focus {
+  outline: none;
+}
+
+.height-300 {
+  height: 300px;
+}
+
+.prism-editor-wrap {
+    width: 500px;
+    height: 500px;
+}
+
+.prism-editor-wrapper .prism-editor__line-numbers {
+    height: auto !important;
+}
 
 </style>

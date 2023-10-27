@@ -1,8 +1,13 @@
 <template>
-    <prism :language="language" :plugins="plugins" :code="html" ref="prismRef"><slot></slot></prism>
+    <prism :language="language" :line-numbers="true" ref="prismRef">
+    11
+    22
+    33
+    </prism>
 </template>
 
 <script>
+  import 'prismjs/themes/prism.css'
 
     export default {
         name: 'MyPrism',
