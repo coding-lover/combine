@@ -581,7 +581,8 @@
                 //debugger
                 console.log(':highlight="highlighter"')
                 console.log(code)
-                return highlight(code, languages.js); // languages.<insert language> to return html with markup
+                console.log(languages)
+                return highlight(code, languages.plaintext); // languages.<insert language> to return html with markup
             },
              handleWindowTop() {
                 let curWin = window.getCurrent();
