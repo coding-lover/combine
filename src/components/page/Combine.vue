@@ -579,9 +579,9 @@
             },
             highlighter(code) {
                 //debugger
-                console.log(':highlight="highlighter"')
-                console.log(code)
-                console.log(languages)
+                //console.log(':highlight="highlighter"')
+                //console.log(code)
+                //console.log(languages)
                 return highlight(code, languages.plaintext); // languages.<insert language> to return html with markup
             },
              handleWindowTop() {
@@ -597,7 +597,7 @@
             delHis(idx) {
                 //删除功能
                 this.combineHis.splice(idx, 1);
-                console.log(idx,  this.combineHis)
+                //console.log(idx,  this.combineHis)
             },
             delAllHis() {
                 this.combineHis = [];
@@ -663,7 +663,7 @@
             },
 
             folderChange(value) {
-                console.warn(value)
+                //console.warn(value)
                 if(this.isWinOs) {
                     value = value.map(res => {
                         return res.slice(1);
@@ -675,14 +675,14 @@
 
             wmcReadDir(path) {
                 return invoke('wmc_read_dir', { path: path }).then(res => {
-                    console.log(res)
+                    //console.log(res)
 
                     let content = JSON.parse(res)
                     if(!content || content.length == 0) {
                         return [];
                     }
 
-                    console.warn(content)
+                    //console.warn(content)
                     content = content.map(item => {
                         let parsed = item.split(',');
                         return {
@@ -708,7 +708,7 @@
 
             wmcWrite(path, content) {
                 return invoke('wmc_write', { path: path , content: content}).then(res => {
-                    console.log('wmc_write: ' + res)
+                    //console.log('wmc_write: ' + res)
 
                     return JSON.parse(res);
                 });
@@ -868,52 +868,38 @@
                         return false;
                     }
 
+                    let combineContent = '';
                     let promiseList = [];
                     let combineList = {name: '', create_at: this.getDatetime(), children: []};
-                    rawList.map(file => {
-                        //debugger
-                        /*if(this.form.delivery && rawIds.indexOf(file.id) == -1) {
-                            return false;
-                        }
+                    this.form.ready = false;
 
-                        if(!this.form.delivery && rawIds.indexOf(file.id) != -1) {
-                            return false;
-                        }*/
+                    rawList.map(file => {
 
                         //合并的源文件列表
                         combineList.children.push(file.name);
 
-                        let p = this.readFile(file, res => {
-                            //debugger
-                            console.warn('***********res***********')
-                            console.warn(res)
-                            res = res.split("\n").filter(res => res);
-                            res.splice(0, this.form.fileHeaderDeletedLine);
-                            res.splice(res.length - this.form.fileFooterDeletedLine, this.form.fileFooterDeletedLine);
-                            return res.join("\n");
-                        });
-
-                        promiseList.push(p);
+                        //debugger
+                        // 使用正则表达式来删除前 n 行
+                        let fixContent = this.removeLineFromStr(file.content, this.form.fileHeaderDeletedLine);
+                        combineContent += this.removeLineFromStr(fixContent, -this.form.fileFooterDeletedLine);
+                        
                     });
 
-                    if(promiseList.length == 0) {
+                    if(combineList.children.length == 0) {
+                        this.form.ready = true;
                         this.$message.info('请上传要合并的文件11');
                         return false;
                     }
 
-                    this.form.ready = false;
-                    Promise.all([...promiseList]).then(res => {
-                        console.log(res)
-                        res.unshift(this.fixTextArea(this.form.fileHeader));
-                        res.push(this.fixTextArea(this.form.fileFooter));
-                        res = res.filter(res => res);
-                        console.log("raw res: ", res)
-                        res = res.join("\n");
+                    combineContent = this.fixTextArea(this.form.fileHeader) 
+                                    + "\n" 
+                                    + combineContent 
+                                    + "\n" 
+                                    + this.fixTextArea(this.form.fileFooter);
 
-                        console.log(res)
-                        this.form.ready = true;
-                        //this.downloadFileByContent(res, this.form.fileName + this.form.fileSuffix);
-                        this.wmcWrite(this.getFormFilePath(), res).then(res => {
+                    
+                    this.form.ready = true;
+                    this.wmcWrite(this.getFormFilePath(), combineContent).then(res => {
                             console.log('合并结果', res);
                             if(res) {
                                 this.$message.success("合并成功，文件：" + this.getFormFilePath());
@@ -929,11 +915,22 @@
                             }
 
                             this.$message.error("合并失败，文件：" + this.getFormFilePath() + ', 请检查文件路径是否存在或者是否有写入权限');
-                        })
                     });
-
-                    console.log('content')
+                    
                 });
+            },
+
+            removeLineFromStr(fileStr, line) {
+                // 使用正则表达式来删除前 n 行
+                if(line > 0) {
+                    let linesToRemove = new RegExp(`^(.*?\n){${line}}`);
+                    return fileStr.replace(linesToRemove, '');
+                }
+
+                // 使用正则表达式删除最后 n 行
+                line = Math.abs(line);
+                let linesToRemove = new RegExp(`([\s\S]*?)(\n.*){${line}}$`);
+                return fileStr.replace(linesToRemove, '$1');
             },
 
             fixTextArea(content) {
@@ -1030,7 +1027,7 @@
             test(flag) {
                 return new Promise((resolve, reject) => {
                     let time = Math.ceil(Math.random() * 10000);
-                    console.warn('执行 ' + flag);
+                    //console.warn('执行 ' + flag);
                     setTimeout(() => {
                         resolve(time + '-' + flag);
                     }, time);
@@ -1042,8 +1039,8 @@
                 return new Promise((resolve, reject) => {
                     let fileReader = new FileReader();
                     fileReader.onloadend =  (event) => {
-                        console.warn(event)
-                        console.warn(this.detectCharset(event.target.result))
+                        //console.warn(event)
+                        //console.warn(this.detectCharset(event.target.result))
                         resolve(callback(this.fileContentDecode(event.target.result)));
                     };
 
@@ -1346,10 +1343,10 @@
             },
 
             handlePreview(file) {
-                console.log(file);
+                //console.log(file);
             },
             handleProgress(event, file, fileList) {
-                console.log(event, file);
+                //console.log(event, file);
             },
 
             myHandleChange(idx) {
@@ -1383,10 +1380,10 @@
                     if(idx == this.specialKey) {
                         //debugger
                         this.specialFileList = fileList;
-                        console.log(this.specialFileList)
+                        //console.log(this.specialFileList)
                     } else if(idx == this.specialBoxKey) {
                         this.specialBoxFileList = fileList;
-                        console.log(fileList)
+                        //console.log(fileList)
                     } else {
                         this.nodeList[idx].fileNum++;
                         this.nodeList[idx].fileList = fileList;
