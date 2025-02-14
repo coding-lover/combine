@@ -1378,7 +1378,6 @@
 
                     //file.
                     if(idx == this.specialKey) {
-                        //debugger
                         this.specialFileList = fileList;
                         //console.log(this.specialFileList)
                     } else if(idx == this.specialBoxKey) {
