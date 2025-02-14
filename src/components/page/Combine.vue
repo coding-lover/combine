@@ -37,6 +37,7 @@
                                         :on-progress="handleProgress"
                                         :on-change="myHandleChange(idx)"
                                         :auto-upload="false"
+                                        :before-upload="handleBeforUpload"
                                         multiple>
                                     <i class="el-icon-upload" v-show="item.fileNum == 0"></i>
                                     <div class="el-upload__text" v-show="item.fileNum == 0">将文件拖到此处，或<em>点击上传</em></div>
@@ -91,12 +92,10 @@
                                         drag
                                         :ref="createUploadKey(specialBoxKey)"
                                         action=""
-                                        :on-preview="handlePreview"
                                         :on-remove="handleRemove(specialBoxKey)"
-                                        :on-progress="handleProgress"
                                         :on-change="myHandleChange(specialBoxKey)"
+                                        :before-upload="handleBeforUpload"
                                         :auto-upload="false"
-                                        :disabled="false"
                                         multiple>
                                     <i class="el-icon-upload" v-show="specialBoxFileList.length == 0"></i>
                                     <div class="el-upload__text" v-show="specialBoxFileList == 0">将文件拖到此处，或<em>点击上传</em></div>
@@ -321,6 +320,7 @@
     export default {
         data() {
             return {
+                loading: false,
                 showFlag: true,
                 code: "",
                 plugins: ['line-numbers'],
@@ -567,13 +567,43 @@
             this.initParams();
             this.handleWindowTop();
 
+            //fix loading
+            setTimeout(() => { this.closeLoading(); }, 200);
+
             if(navigator.userAgent.toLowerCase().indexOf('windows') != -1) {
                 this.isWinOs = true;
                 this.folderData.dirs = ['C:/', 'D:/', 'E:/', 'F:/'];
             }
+
+            
         },
 
         methods: {
+            //useless
+            handleBeforUpload(file) {
+                //alert(11)
+                //console.log('befor upload......')
+                //this.openLoading();
+                console.log('before upload:', file)
+
+                return false;
+            },
+            openLoading(){
+                this.loading = this.$loading({
+                    lock: true,
+                    text: 'Loading',
+                    spinner: 'el-icon-loading',
+                    background: 'rgba(0, 0, 0, 0.7)'
+                });
+                console.log(111)
+            },
+            closeLoading() {
+                this.$nextTick(() => { 
+                    if(this.loading != false) {
+                        this.loading.close();
+                    }
+                });
+            },
             handleMouseOver(file) {
                 this.code = file.content;
             },
@@ -850,6 +880,7 @@
 
                     let rawList = [];
                     let rawIds = [];
+                    this.form.ready = false;
 
                     if(this.form.delivery) {
                         this.nodeList.map(node => {
@@ -865,14 +896,14 @@
 
                     if(rawList.length == 0) {
                         this.$message.info('请上传要合并的文件');
+                        this.form.ready = true;
                         return false;
                     }
 
                     let combineContent = '';
                     let promiseList = [];
                     let combineList = {name: '', create_at: this.getDatetime(), children: []};
-                    this.form.ready = false;
-
+                    
                     rawList.map(file => {
 
                         //合并的源文件列表
@@ -898,8 +929,8 @@
                                     + this.fixTextArea(this.form.fileFooter);
 
                     
-                    this.form.ready = true;
                     this.wmcWrite(this.getFormFilePath(), combineContent).then(res => {
+                            this.form.ready = true;
                             console.log('合并结果', res);
                             if(res) {
                                 this.$message.success("合并成功，文件：" + this.getFormFilePath());
@@ -939,85 +970,6 @@
                 }
 
                 return content.replace(new RegExp("\n", "g"), "\r\n");
-            },
-
-            combineFile_bak() {
-                this.$refs['form'].validate((valid) => {
-                    if (!valid) {
-                        return false;
-                    }
-
-                    let rawList = [];
-                    let rawIds = [];
-                    this.nodeList.map(node => {
-                        node.fileList.map(file => {
-                            rawIds.push(file.id);
-                            rawList.push(file);
-                        });
-                    });
-
-                    rawList.push(...this.specialFileList);
-                    rawList.push(...this.specialBoxFileList);
-
-                    if(this.dragList.length != rawList.length) {
-                        this.dragList = rawList;
-                    }
-
-                    if(this.dragList.length == 0) {
-                        this.$message.info('请上传要合并的文件11');
-                        return false;
-                    }
-
-                    let promiseList = [];
-                    this.dragList.map(file => {
-                        //debugger
-                        /*if(this.form.delivery && rawIds.indexOf(file.id) == -1) {
-                            return false;
-                        }
-
-                        if(!this.form.delivery && rawIds.indexOf(file.id) != -1) {
-                            return false;
-                        }*/
-
-                        let p = this.readFile(file, res => {
-                            res = res.split("\n").filter(res => res);
-                            res.splice(0, file.headerDeleteLine);
-                            res.splice(res.length - file.footerDeleteLine, file.footerDeleteLine);
-                            return res.join("\n");
-                        });
-
-                        promiseList.push(p);
-                    });
-
-                    if(promiseList.length == 0) {
-                        this.$message.info('请上传文件33');
-                        return false;
-                    }
-
-                    this.form.ready = false;
-                    Promise.all([...promiseList]).then(res => {
-                        console.log(res)
-                        res.unshift(this.form.fileHeader);
-                        res.push(this.form.fileFooter);
-                        res = res.filter(res => res);
-                        res = res.join("\n");
-
-                        console.log(res)
-                        this.form.ready = true;
-                        //this.downloadFileByContent(res, this.form.fileName + this.form.fileSuffix);
-                        this.wmcWrite(this.getFormFilePath(), res).then(res => {
-                            console.log('合并结果', res);
-                            if(res) {
-                                this.$message.success("合并成功，文件：" + this.getFormFilePath());
-                                return true;
-                            }
-
-                            this.$message.error("合并失败，文件：" + this.getFormFilePath() + ', 请检查文件路径是否存在或者是否有写入权限');
-                        })
-                    });
-
-                    console.log('content')
-                });
             },
 
             getFormFilePath() {
@@ -1254,7 +1206,7 @@
                     result = 'GBK';
                 }
 
-                console.error(collect, result);
+                //console.error(collect, result);
 
                 return result;
             },
@@ -1317,7 +1269,7 @@
 
             handleRemove(idx) {
                 return (file, fileList) => {
-                    console.log(idx, file, fileList)
+                    //console.log(idx, file, fileList)
                     /*for(var key in fileList) {
                         if(file.name == fileList[key].name) {
                             return false;
@@ -1346,11 +1298,15 @@
                 //console.log(file);
             },
             handleProgress(event, file, fileList) {
-                //console.log(event, file);
+                console.log(event, file, fileList);
+                if(event != undefined) {
+                    this.openLoading();
+                }
             },
 
             myHandleChange(idx) {
                 return (file, fileList) => {
+                    this.openLoading();
                     if (!this.tmpFileNames.hasOwnProperty(idx)) {
                         this.tmpFileNames[idx] = [];
                     }
@@ -1366,6 +1322,7 @@
                             this.$refs[this.createUploadKey(idx)][0].handleRemove(file, file.raw);
                         }
 
+                        this.closeLoading();
                         return false;
                     }
 
@@ -1374,7 +1331,10 @@
                     file.footerDeleteLine = 1;
 
                     //cache file content 
-                    this.readFile(file, res => { file.content = res; });
+                    this.readFile(file, res => { 
+                        file.content = res; 
+                        this.closeLoading();
+                    });
 
                     //file.
                     if(idx == this.specialKey) {
