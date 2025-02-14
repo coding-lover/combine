@@ -47,12 +47,8 @@
                                         <label class="el-upload-list__item-status-label">
                                             <i class="el-icon-upload-success el-icon-circle-check"></i>
                                         </label>
-                                        <el-tooltip class="item" effect="light"  placement="right">
-                                            <div class="prism-editor-wrap"  slot="content">
-                                                <prism-editor class="my-editor" v-model="code" :highlight="highlighter" line-numbers readonly></prism-editor>
-                                            </div>
-                                            <i class="el-icon-close" style="width: 20px;" @click="closeUploadedFile(idx, file, true)" @mouseover="handleMouseOver(file)"></i>
-                                        </el-tooltip>
+                                        <i class="el-icon-close" style="width: 20px;" @click="closeUploadedFile(idx, file, true)" @mouseover="handleMouseOver(file)"></i>
+
                                     </div>
                                 </el-upload>
                             </div>
@@ -104,12 +100,8 @@
                                         <label class="el-upload-list__item-status-label">
                                             <i class="el-icon-upload-success el-icon-circle-check"></i>
                                         </label>
-                                        <el-tooltip class="item" effect="light"  placement="right">
-                                            <div class="prism-editor-wrap"  slot="content">
-                                                <prism-editor class="my-editor" v-model="code" :highlight="highlighter" line-numbers readonly></prism-editor>
-                                            </div>
-                                            <i class="el-icon-close" style="width: 20px;" @click="closeUploadedFile(specialBoxKey, file, false)" @mouseover="handleMouseOver(file)"></i>
-                                        </el-tooltip>
+                                        <i class="el-icon-close" style="width: 20px;" @click="closeUploadedFile(specialBoxKey, file, false)" @mouseover="handleMouseOver(file)"></i>
+
                                     </div>
                                 </el-upload>
 
@@ -605,7 +597,7 @@
                 });
             },
             handleMouseOver(file) {
-                this.code = file.content;
+                //this.code = file.content;
             },
             highlighter(code) {
                 //debugger
