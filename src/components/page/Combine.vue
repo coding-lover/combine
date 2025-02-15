@@ -1863,4 +1863,8 @@
     line-height: 22px;
     height: 18px;
 }
+
+.el-input__inner, .el-textarea__inner, .box-card {
+    border: 1px solid #2f3033 !important;
+}
 </style>
