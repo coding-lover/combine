@@ -92,11 +92,16 @@
                                         :on-change="myHandleChange(specialBoxKey)"
                                         :before-upload="handleBeforUpload"
                                         :auto-upload="false"
+                                        :file-list="specialBoxFileList"
                                         multiple>
                                     <i class="el-icon-upload" v-show="specialBoxFileList.length == 0"></i>
                                     <div class="el-upload__text" v-show="specialBoxFileList == 0">将文件拖到此处，或<em>点击上传</em></div>
                                     <div slot="file" slot-scope="{file}">
-                                        <a class="el-upload-list__item-name"><i class="el-icon-document"></i>{{file.name}}</a>
+                                        <a class="el-upload-list__item-name">
+                                            <i class="el-icon-document"></i>
+                                            <span class="upload-file-name-fmt">{{file.name}} </span>
+                                            <span style="color:#F56C6C;margin-left: 10px;;">上传耗时：{{showSpendTime(file)}}</span>
+                                        </a>
                                         <label class="el-upload-list__item-status-label">
                                             <i class="el-icon-upload-success el-icon-circle-check"></i>
                                         </label>
@@ -283,10 +288,17 @@
                                 <div slot="header" class="clearfix cb-his-card-header">
                                     <span>[{{his.create_at}}]</span>
                                     <span style="margin-left:10px;">{{his.name}}</span>
+                                    <span style="margin-left:10px;">合并耗时：{{his.spendTime}}</span>
+                                    <span style="margin-left:10px;">总耗时：{{his.totalSpendTime}}</span>
                                     <el-button style="float: right; padding: 3px 0; color:red;cursor: pointer;" type="text" @click="delHis(key)">删除</el-button>
                                 </div>
                                 <div v-for="child in his.children" class="text item">
-                                    {{child}}
+                                    <div v-if="child.name">
+                                        {{child.name}} 
+                                        <span style="color:#F56C6C;margin-left: 10px;">上传耗时： {{child.time }}</span>
+                                    </div>
+
+                                    <div v-else>{{child}}</div>
                                 </div>
                             </el-card>
                         </div>
@@ -571,6 +583,18 @@
         },
 
         methods: {
+            showSpendTime(file) {
+                if(!file.hasOwnProperty('beginTime')) {
+                    return '--秒';
+                }
+                console.log(file)
+                let finishTime = file.hasOwnProperty('finishTime') ? file.finishTime : this.getCurrentTimestamp();
+                return this.formatTime(finishTime - file.beginTime);
+            },
+            getCurrentTimestamp() {
+                return Date.now(); // 获取当前时间戳（毫秒）
+            },
+
             //useless
             handleBeforUpload(file) {
                 //alert(11)
@@ -864,6 +888,16 @@
                 this.updateLocalStorage();
             },
 
+            formatTime(time) {
+                let differenceInSeconds = time / 1000;
+                // 计算小时、分钟和秒
+                let hours = Math.floor(differenceInSeconds / 3600);
+                let minutes = Math.floor((differenceInSeconds % 3600) / 60);
+                let seconds = differenceInSeconds % 60;
+
+                return `${minutes}分${seconds}秒`;
+            },
+
             combineFile() {
                 this.$refs['form'].validate((valid) => {
                     if (!valid) {
@@ -872,6 +906,8 @@
 
                     let rawList = [];
                     let rawIds = [];
+                    let totalSpendTime = 0;
+                    let combineStartTime = this.getCurrentTimestamp();
                     this.form.ready = false;
 
                     if(this.form.delivery) {
@@ -894,12 +930,28 @@
 
                     let combineContent = '';
                     let promiseList = [];
-                    let combineList = {name: '', create_at: this.getDatetime(), children: []};
+                    let combineList = {
+                        name: '', 
+                        combinTime: '',
+                        saveTime: '',
+                        spendTime: '',
+                        create_at: this.getDatetime(), 
+                        children: []
+                    };
                     
                     rawList.map(file => {
+                        
+                        let timeSpend = '';
+                        if(file.hasOwnProperty('beginTime')) {
+                            totalSpendTime += file.finishTime - file.beginTime;
+                            timeSpend = this.formatTime(file.finishTime - file.beginTime);
+                        }
 
                         //合并的源文件列表
-                        combineList.children.push(file.name);
+                        combineList.children.push({
+                            name: file.name,
+                            time: timeSpend
+                        });
 
                         //debugger
                         // 使用正则表达式来删除前 n 行
@@ -920,15 +972,20 @@
                                     + "\n" 
                                     + this.fixTextArea(this.form.fileFooter);
 
-                    
+                    let combineFinishTime = this.getCurrentTimestamp();                    
                     this.wmcWrite(this.getFormFilePath(), combineContent).then(res => {
                             this.form.ready = true;
                             console.log('合并结果', res);
                             if(res) {
                                 this.$message.success("合并成功，文件：" + this.getFormFilePath());
 
+                                let combineSaveTime = this.getCurrentTimestamp();
                                 combineList.name = this.getFormFilePath();
-
+                                combineList.combinTime = this.formatTime(combineFinishTime - combineStartTime);
+                                combineList.saveTime = this.formatTime(combineSaveTime - combineFinishTime);
+                                combineList.spendTime = this.formatTime(combineSaveTime - combineStartTime);
+                                combineList.totalSpendTime = this.formatTime(combineSaveTime - combineStartTime + totalSpendTime);
+                                
                                 //debug 
                                 console.log(combineList)
                                 this.combineHis.push(combineList);
@@ -1299,6 +1356,7 @@
             myHandleChange(idx) {
                 return (file, fileList) => {
                     this.openLoading();
+                    let beginTime = this.getCurrentTimestamp();
                     if (!this.tmpFileNames.hasOwnProperty(idx)) {
                         this.tmpFileNames[idx] = [];
                     }
@@ -1321,26 +1379,30 @@
                     file.id = this.createId();
                     file.headerDeleteLine = 1;
                     file.footerDeleteLine = 1;
+                    file.beginTime = beginTime;
 
                     //cache file content 
                     this.readFile(file, res => { 
                         file.content = res; 
+                        file.finishTime = this.getCurrentTimestamp();
+                        //debugger
                         this.closeLoading();
+
+                        //file.
+                        if(idx == this.specialKey) {
+                            this.specialFileList = fileList;
+                            //console.log(this.specialFileList)
+                        } else if(idx == this.specialBoxKey) {
+                            this.specialBoxFileList = fileList;
+                            //console.log(fileList)
+                        } else {
+                            this.nodeList[idx].fileNum++;
+                            this.nodeList[idx].fileList = fileList;
+                        }
+
+                        this.tmpFileNames[idx].push(file.name);
                     });
 
-                    //file.
-                    if(idx == this.specialKey) {
-                        this.specialFileList = fileList;
-                        //console.log(this.specialFileList)
-                    } else if(idx == this.specialBoxKey) {
-                        this.specialBoxFileList = fileList;
-                        //console.log(fileList)
-                    } else {
-                        this.nodeList[idx].fileNum++;
-                        this.nodeList[idx].fileList = fileList;
-                    }
-
-                    this.tmpFileNames[idx].push(file.name);
                 };
             },
 
@@ -1793,4 +1855,12 @@
     height: auto !important;
 }
 
+.upload-file-name-fmt {
+    width: 200px;
+    overflow: hidden;
+    display: inline-block;
+   
+    line-height: 22px;
+    height: 18px;
+}
 </style>
