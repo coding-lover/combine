@@ -956,8 +956,8 @@
                         //debugger
                         // 使用正则表达式来删除前 n 行
                         let fixContent = this.removeLineFromStr(file.content, this.form.fileHeaderDeletedLine);
-                        combineContent += this.removeLineFromStr(fixContent, -this.form.fileFooterDeletedLine);
-                        
+                        fixContent = this.removeLineFromStr(fixContent, -this.form.fileFooterDeletedLine);
+                        combineContent += fixContent + "\r\n";
                     });
 
                     if(combineList.children.length == 0) {
@@ -966,10 +966,11 @@
                         return false;
                     }
 
+                    combineContent = this.removeLineFromStr(combineContent, -1);
                     combineContent = this.fixTextArea(this.form.fileHeader) 
-                                    + "\n" 
+                                    + "\r\n" 
                                     + combineContent 
-                                    + "\n" 
+                                    + "\r\n" 
                                     + this.fixTextArea(this.form.fileFooter);
 
                     let combineFinishTime = this.getCurrentTimestamp();                    
@@ -1001,15 +1002,17 @@
             },
 
             removeLineFromStr(fileStr, line) {
+                let splitStr = fileStr.search("\r") != -1 ? "\r\n" : "\n";
+
                 // 使用正则表达式来删除前 n 行
                 if(line > 0) {
-                    let linesToRemove = new RegExp(`^(.*?\n){${line}}`);
+                    let linesToRemove = new RegExp(`^(.*?${splitStr}){${line}}`);
                     return fileStr.replace(linesToRemove, '');
                 }
 
                 // 使用正则表达式删除最后 n 行
                 line = Math.abs(line);
-                let linesToRemove = new RegExp(`([\s\S]*?)(\n.*){${line}}$`);
+                let linesToRemove = new RegExp(`([\s\S]*?)(${splitStr}.*){${line}}$`);
                 return fileStr.replace(linesToRemove, '$1');
             },
 
