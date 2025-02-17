@@ -313,6 +313,7 @@
     import ElTableDraggable from 'element-ui-el-table-draggable';
     const iconv = require('iconv-lite');
     const jschardet = require("jschardet")
+    const chardet = require('chardet');
     import { invoke, window } from '@tauri-apps/api';
 
     // import highlighting library (you can use any library you want just return html string)
@@ -328,7 +329,7 @@
                 showFlag: true,
                 code: "",
                 plugins: ['line-numbers'],
-                activeName: 'first',
+                activeName: 'third',
                 winTop: '',
                 cacheFile: 'web.conf.json',
                 isWinOs: false,
@@ -587,7 +588,7 @@
                 if(!file.hasOwnProperty('beginTime')) {
                     return '--秒';
                 }
-                console.log(file)
+                //console.log(file)
                 let finishTime = file.hasOwnProperty('finishTime') ? file.finishTime : this.getCurrentTimestamp();
                 return this.formatTime(finishTime - file.beginTime);
             },
@@ -956,6 +957,7 @@
                         //debugger
                         // 使用正则表达式来删除前 n 行
                         let fixContent = this.removeLineFromStr(file.content, this.form.fileHeaderDeletedLine);
+                        //console.log('lastContent: ', fixContent.slice(-30));
                         fixContent = this.removeLineFromStr(fixContent, -this.form.fileFooterDeletedLine);
                         combineContent += fixContent + "\r\n";
                     });
@@ -988,7 +990,7 @@
                                 combineList.totalSpendTime = this.formatTime(combineSaveTime - combineStartTime + totalSpendTime);
                                 
                                 //debug 
-                                console.log(combineList)
+                                //console.log(combineList)
                                 this.combineHis.push(combineList);
                                 this.updateLocalStorage();
 
@@ -1007,13 +1009,37 @@
                 // 使用正则表达式来删除前 n 行
                 if(line > 0) {
                     let linesToRemove = new RegExp(`^(.*?${splitStr}){${line}}`);
+                    console.log('firstLines: ', line, fileStr.match(linesToRemove));
                     return fileStr.replace(linesToRemove, '');
                 }
 
                 // 使用正则表达式删除最后 n 行
                 line = Math.abs(line);
                 let linesToRemove = new RegExp(`([\s\S]*?)(${splitStr}.*){${line}}$`);
-                return fileStr.replace(linesToRemove, '$1');
+                if(fileStr.match(linesToRemove)) {
+                    return fileStr.replace(linesToRemove, '$1');
+                }
+
+                //console.log('endLines: ', line, fileStr.match(linesToRemove));
+
+                let length = 100 * line;
+                let rawStr = fileStr.slice(0, fileStr.length - length);
+                let endStr = fileStr.slice(-length);
+                let endStrArr = endStr.split("\r\n");
+
+                //remove empty line
+                for(let idx = endStrArr.length - 1; idx > 0; idx--) {
+                    if(endStrArr[idx] != '') {
+                        break;
+                    }
+                    
+                    delete endStrArr[idx];
+                }
+
+                //console.log('endArr: ', endStrArr);
+
+                endStrArr = endStrArr.slice(0, endStrArr.length - line);
+                return rawStr + endStrArr.join('\r\n');
             },
 
             fixTextArea(content) {
@@ -1037,20 +1063,73 @@
                     }, time);
                 });
             },
-        
 
-            readFile(file, callback) {
+            detectChartset(file) {
                 return new Promise((resolve, reject) => {
-                    let fileReader = new FileReader();
-                    fileReader.onloadend =  (event) => {
-                        //console.warn(event)
-                        //console.warn(this.detectCharset(event.target.result))
-                        resolve(callback(this.fileContentDecode(event.target.result)));
+                    //detect chartset
+                    // 使用 FileReader 读取文件的部分内容
+                    const reader = new FileReader();
+
+                    //console.log(file.raw);
+                    // 读取文件的前 10000 字节（或更多，根据需要）
+                    const chunkSize = 1000; // 读取前10000个字节
+                    const slice = file.raw.slice(0, chunkSize); 
+
+                    reader.onload = (e) => {
+                        let encoding = this.detectCharset(e.target.result);
+                        resolve(encoding);
                     };
 
-                    fileReader.readAsBinaryString(file.raw);
+                    // 读取部分文件内容为 ArrayBuffer
+                    reader.readAsBinaryString(slice);
                 });
             },
+            
+            readFile(file, callback) {
+                this.detectChartset(file).then(encoding => {
+                    console.log('encoding: ', encoding);
+
+                    return new Promise((resolve, reject) => {
+                        let fileReader = new FileReader();
+                        let startTime = this.getCurrentTimestamp();
+                        fileReader.onloadend =  (event) => {
+                                let readFinishTime = this.getCurrentTimestamp();
+                                let content = event.target.result;
+                                let decodeFinishTime = this.getCurrentTimestamp();
+
+                                console.log(`readSpend: ${readFinishTime - startTime}`, `decodeSpend: ${decodeFinishTime - readFinishTime}`);
+
+                                resolve(callback(content));
+                            };
+
+                            //fileReader.read
+                            //fileReader.readAsArrayBuffer(file.raw);
+                            fileReader.readAsText(file.raw, encoding);
+                    });
+                });                
+            },
+
+            detectCharset(binaryStr) {
+                let collect = jschardet.detectAll(binaryStr);
+                let result = '';
+                let confidence = 0;
+
+                for(let idx in collect) {
+                    if(collect[idx].confidence > confidence) {
+                        result = collect[idx].encoding;
+                        confidence = collect[idx].confidence;
+                    }
+                }
+
+                if(['TIS-620', 'windows-1252'].indexOf(result) != -1) {
+                    result = 'GBK';
+                }
+
+                //console.error(collect, result);
+
+                return result;
+            },
+
             fileConfigAdd() {
                 this.dispatchFileConfig(true);
             },
@@ -1236,31 +1315,6 @@
                 Promise.all([...promiseList]).then(res => {
                     console.log('replace res: ', res);
                 });
-            },
-
-            fileContentDecode(binaryStr) {
-                return iconv.decode(binaryStr, this.detectCharset(binaryStr));
-            },
-
-            detectCharset(binaryStr) {
-                let collect = jschardet.detectAll(binaryStr);
-                let result = '';
-                let confidence = 0;
-
-                for(let idx in collect) {
-                    if(collect[idx].confidence > confidence) {
-                        result = collect[idx].encoding;
-                        confidence = collect[idx].confidence;
-                    }
-                }
-
-                if(['TIS-620', 'windows-1252'].indexOf(result) != -1) {
-                    result = 'GBK';
-                }
-
-                //console.error(collect, result);
-
-                return result;
             },
 
             downloadFileByContent(content, fileName) {
