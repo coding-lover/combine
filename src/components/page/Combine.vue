@@ -313,7 +313,6 @@
     import ElTableDraggable from 'element-ui-el-table-draggable';
     const iconv = require('iconv-lite');
     const jschardet = require("jschardet")
-    const chardet = require('chardet');
     import { invoke, window } from '@tauri-apps/api';
 
     // import highlighting library (you can use any library you want just return html string)
@@ -1009,8 +1008,25 @@
                 // 使用正则表达式来删除前 n 行
                 if(line > 0) {
                     let linesToRemove = new RegExp(`^(.*?${splitStr}){${line}}`);
-                    console.log('firstLines: ', line, fileStr.match(linesToRemove));
-                    return fileStr.replace(linesToRemove, '');
+                    if(fileStr.match(linesToRemove)) {
+                        console.log('firstLines: ', line, fileStr.match(linesToRemove));
+                        return fileStr.replace(linesToRemove, '');
+                    }
+                    
+                    let length = 100 * line;
+                    let rawStr = fileStr.slice(length);
+                    let firstStrArr = fileStr.slice(0, length).split("\n");
+                    //remove empty line
+                    for(let idx = 0; idx < firstStrArr.length; idx++) {
+                        if(firstStrArr[idx] != '') {
+                            break;
+                        }
+                        
+                        delete firstStrArr[idx];
+                    }
+                    
+                    let firstStr = firstStrArr.slice(line).join(splitStr).replaceAll("\r\r\n", "\r\n");
+                    return  firstStr + rawStr;
                 }
 
                 // 使用正则表达式删除最后 n 行
