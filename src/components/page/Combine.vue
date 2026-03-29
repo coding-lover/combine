@@ -687,9 +687,9 @@ export default {
 
             console.log(value);
             if (this.isWinOs) {
-                value = value.map(res => {
-                    return res.slice(1);
-                });
+                // value = value.map(res => {
+                //     return res.slice(1);
+                // });
             }
 
             this.selectedFolder = value;
@@ -845,17 +845,6 @@ export default {
 
                 return realPath;
             });
-        },
-
-        folderChange(value) {
-            //console.warn(value)
-            if (this.isWinOs) {
-                value = value.map(res => {
-                    return res.slice(1);
-                });
-            }
-
-            this.selectedFolder = value;
         },
 
         wmcReadDir(path) {
