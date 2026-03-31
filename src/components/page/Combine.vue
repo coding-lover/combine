@@ -331,7 +331,6 @@ export default {
         async myHandleChange({ idx, file, fileList }) {
             this.openLoading();
             const beginTime = Date.now();
-            debugger
             if (!this.tmpFileNames[idx]) this.tmpFileNames[idx] = [];
             
             if (this.tmpFileNames[idx].indexOf(file.name) !== -1) {
@@ -443,7 +442,6 @@ export default {
             });
         },
         clearSearchReplace(idx) {
-            debugger
             const node = this.nodeList[idx];
             if (!node) return;
             node.fileList = [];
@@ -567,6 +565,7 @@ export default {
         saveTemplate() {
             if (!this.form.templateName) return this.$message.info('请输入模板名称');
             const template = JSON.parse(JSON.stringify(this.form));
+            delete template.selectedTemplate;
             delete template.templateList;
             
             const existingIdx = this.form.templateList.findIndex(t => t.templateName === this.form.templateName);

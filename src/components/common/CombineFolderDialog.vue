@@ -1,7 +1,7 @@
 
 <template>
     <el-dialog title="选择保存的目录" :visible="visible" @update:visible="val => $emit('update:visible', val)">
-        <div>
+        <div class="pb-10">
             <span class="folder-select-title">当前选中: </span>
             <span v-show="!selectedFolderStr" style="color:red;">未选中文件夹</span>
             <span v-show="selectedFolderStr">{{ selectedFolderStr }}</span>
